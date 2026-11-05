@@ -11,6 +11,7 @@ Legend: **Yes** (Planned column) = intended. **Draft** = file written, not revie
 |---|---|---|---|---|---|
 | `docs/contracts.md` (shared contracts) | Huma | Yes | Draft | No (nothing to run) | No, awaiting Michelle |
 | `docs/status.md` (this file) | Huma | Yes | Draft | No (nothing to run) | No |
+| `CLAUDE.md` (working rules) | Huma (shared with Michelle, pending her review) | Yes | Draft | No (nothing to run) | No |
 | Ticket schema | Huma and Michelle (to be agreed) | Yes | No | No | No |
 | Synthetic tickets | Huma | Yes | No | No | No |
 | Expected results (written before any tool runs) | Huma | Yes | No | No | No |
