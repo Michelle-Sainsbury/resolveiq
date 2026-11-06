@@ -6,6 +6,7 @@
     "statuses": ["open", "in_progress", "blocked", "completed", "cancelled"],
     "required_fields_in_check_order": ["ticket_id", "client_id", "owner", "status", "due_date", "dependencies"],
     "contradictions": ["self-dependency", "duplicate dependency (flagged at the second occurrence)", "blocked with an empty dependency list"],
+    "owner": "null or absent is a missing-field issue (code missing); the overall result is Needs Human Review and independent findings are retained (confirmed)",
     "order": "any validation issue gives Needs Human Review; otherwise the highest finding wins",
     "findings": {
       "blocked": "High (status is blocked)",
@@ -16,8 +17,7 @@
     }
   },
   "scoring": {
-    "scored_false_means": "excluded from pass or fail until Michelle answers",
-    "pending_michelle": ["T-102 owner issue", "T-106", "T-110"],
+    "owner_null": "confirmed: a missing-field issue and Needs Human Review (T-102, T-106, T-110); these rows are scored",
     "known_limitation": ["T-103"],
     "not_in_contract": "A 14-day inactivity flag is not part of the implemented contract and is not scored."
   },
@@ -39,16 +39,17 @@
       "validation": {
         "valid": false,
         "issues": [
-          { "field": "owner", "code": "missing", "scored": false, "pending_michelle": true },
+          { "field": "owner", "code": "missing", "scored": true },
           { "field": "due_date", "code": "missing", "scored": true },
           { "field": "dependencies", "code": "missing", "scored": true }
         ]
       },
       "risk": { "classification": "Needs Human Review", "scored": true, "findings": [
+        { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["owner"] },
         { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["due_date"] },
         { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["dependencies"] }
       ] },
-      "notes": "The overall level is certain from the missing due_date and dependencies. The owner issue is pending Michelle and excluded from pass or fail."
+      "notes": "owner, due_date, and dependencies are all missing. No deadline finding is produced because due_date is missing."
     },
     {
       "ticket_id": "T-103",
@@ -79,16 +80,15 @@
     },
     {
       "ticket_id": "T-106",
-      "validation": { "valid": false, "issues": [ { "field": "owner", "code": "missing", "scored": false, "pending_michelle": true } ] },
+      "validation": { "valid": false, "issues": [ { "field": "owner", "code": "missing", "scored": true } ] },
       "risk": {
-        "classification": "pending Michelle", "scored": false,
-        "contract_reading": "Needs Human Review",
+        "classification": "Needs Human Review", "scored": true,
         "findings": [
           { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["owner"] },
           { "rule": "overdue", "classification": "High", "calculated": { "days_remaining": -3, "days_overdue": 3 }, "evidence_fields": ["status", "due_date"] }
         ]
       },
-      "notes": "Owner null. Whether this is a missing-field issue or an unassigned state is pending Michelle. Excluded from pass or fail."
+      "notes": "Owner null is a missing-field issue, so the overall result is Needs Human Review. The overdue High finding is independently supported and retained, but it does not set the overall result."
     },
     {
       "ticket_id": "T-107",
@@ -115,16 +115,14 @@
     },
     {
       "ticket_id": "T-110",
-      "validation": { "valid": false, "issues": [ { "field": "owner", "code": "missing", "scored": false, "pending_michelle": true } ] },
+      "validation": { "valid": false, "issues": [ { "field": "owner", "code": "missing", "scored": true } ] },
       "risk": {
-        "classification": "pending Michelle", "scored": false,
-        "contract_reading": "Needs Human Review",
+        "classification": "Needs Human Review", "scored": true,
         "findings": [
-          { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["owner"] },
-          { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 20 }, "evidence_fields": ["status", "due_date"] }
+          { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["owner"] }
         ]
       },
-      "notes": "Owner null. Pending Michelle. Excluded from pass or fail."
+      "notes": "Owner null is a missing-field issue, so the overall result is Needs Human Review. No operational finding is expected. Not High: unassigned is not automatically High."
     },
     {
       "ticket_id": "T-111",
