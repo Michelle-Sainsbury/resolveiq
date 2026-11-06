@@ -14,6 +14,20 @@ ResolveIQ is an AI-powered implementation issue monitoring agent that validates 
 
 5. **Human Oversight:** As an Implementation Manager, I want final control over ticket updates, priorities, escalations, and communications so ResolveIQ never takes unauthorized actions.
 
+## Status
+
+Implemented locally: `validate_ticket` checks required ticket fields, formats,
+and contradictions without inventing values. `assess_ticket_risk` produces
+High, Medium, Low, or Needs Human Review outcomes with field-level evidence,
+an explicit assessment date, and a configurable 3-calendar-day deadline window.
+Data-quality review is separate from human approval for all operational actions.
+
+The complete automated suite passed all 29 tests on November 6, 2026, covering
+validation, risk classification, deadline boundaries, evidence, and unchanged
+inputs. Portfolio brief generation remains unimplemented. The project planning
+document is still under review. ResolveIQ remains read-only toward operational
+systems: these functions do not update tickets or send communications.
+
 ## Ticket validation
 
 `from resolveiq import validate_ticket` validates a decoded JSON object using
