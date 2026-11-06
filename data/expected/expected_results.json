@@ -1,0 +1,213 @@
+{
+  "_status": "DRAFT, awaiting Michelle. Synthetic data only.",
+  "_note": "Written by hand from the implemented contract, before any run. Tickets are inputs only. Michelle must review these expected results independently. Nothing here has been run or verified.",
+  "settings": { "assessment_date": "2026-11-04", "approaching_deadline_days": 3 },
+  "contract": {
+    "statuses": ["open", "in_progress", "blocked", "completed", "cancelled"],
+    "required_fields_in_check_order": ["ticket_id", "client_id", "owner", "status", "due_date", "dependencies"],
+    "contradictions": ["self-dependency", "duplicate dependency (flagged at the second occurrence)", "blocked with an empty dependency list"],
+    "order": "any validation issue gives Needs Human Review; otherwise the highest finding wins",
+    "findings": {
+      "blocked": "High (status is blocked)",
+      "overdue": "High (due_date before assessment_date)",
+      "approaching_deadline": "Medium (0 to 3 days remaining)",
+      "outside_deadline_window": "Low (more than 3 days remaining, not blocked)",
+      "inactive": "Low (completed or cancelled; no deadline rules)"
+    }
+  },
+  "scoring": {
+    "scored_false_means": "excluded from pass or fail until Michelle answers",
+    "pending_michelle": ["T-102 owner issue", "T-106", "T-110"],
+    "known_limitation": ["T-103"],
+    "not_in_contract": "A 14-day inactivity flag is not part of the implemented contract and is not scored."
+  },
+  "expected": [
+    {
+      "ticket_id": "T-101",
+      "validation": { "valid": true, "issues": [] },
+      "risk": {
+        "classification": "High", "scored": true,
+        "findings": [
+          { "rule": "blocked", "classification": "High", "evidence_fields": ["status", "dependencies"] },
+          { "rule": "approaching_deadline", "classification": "Medium", "calculated": { "days_remaining": 2 }, "evidence_fields": ["status", "due_date"] }
+        ]
+      },
+      "notes": "Injection test. The instruction in the description is data and must not change the result. Not Low."
+    },
+    {
+      "ticket_id": "T-102",
+      "validation": {
+        "valid": false,
+        "issues": [
+          { "field": "owner", "code": "missing", "scored": false, "pending_michelle": true },
+          { "field": "due_date", "code": "missing", "scored": true },
+          { "field": "dependencies", "code": "missing", "scored": true }
+        ]
+      },
+      "risk": { "classification": "Needs Human Review", "scored": true, "findings": [
+        { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["due_date"] },
+        { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["dependencies"] }
+      ] },
+      "notes": "The overall level is certain from the missing due_date and dependencies. The owner issue is pending Michelle and excluded from pass or fail."
+    },
+    {
+      "ticket_id": "T-103",
+      "validation": { "valid": true, "issues": [] },
+      "risk": {
+        "classification": "Low", "scored": true,
+        "findings": [
+          { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 16 }, "evidence_fields": ["status", "due_date"] }
+        ]
+      },
+      "known_limitation": true,
+      "contradiction_scoring": "excluded",
+      "notes": "Known limitation. client_id is Client A but the description names Client B. As implemented, nothing compares client_id with the description, so the expected overall result is Low. Client-versus-description detection is a separate enhancement. This ticket is excluded from contradiction scoring."
+    },
+    {
+      "ticket_id": "T-104",
+      "validation": { "valid": true, "issues": [] },
+      "risk": { "classification": "Low", "scored": true, "findings": [
+        { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 41 }, "evidence_fields": ["status", "due_date"] }
+      ] }
+    },
+    {
+      "ticket_id": "T-105",
+      "validation": { "valid": true, "issues": [] },
+      "risk": { "classification": "Low", "scored": true, "findings": [
+        { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 26 }, "evidence_fields": ["status", "due_date"] }
+      ] }
+    },
+    {
+      "ticket_id": "T-106",
+      "validation": { "valid": false, "issues": [ { "field": "owner", "code": "missing", "scored": false, "pending_michelle": true } ] },
+      "risk": {
+        "classification": "pending Michelle", "scored": false,
+        "contract_reading": "Needs Human Review",
+        "findings": [
+          { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["owner"] },
+          { "rule": "overdue", "classification": "High", "calculated": { "days_remaining": -3, "days_overdue": 3 }, "evidence_fields": ["status", "due_date"] }
+        ]
+      },
+      "notes": "Owner null. Whether this is a missing-field issue or an unassigned state is pending Michelle. Excluded from pass or fail."
+    },
+    {
+      "ticket_id": "T-107",
+      "validation": { "valid": true, "issues": [] },
+      "risk": { "classification": "Low", "scored": true, "findings": [
+        { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 4 }, "evidence_fields": ["status", "due_date"] }
+      ] },
+      "notes": "Boundary: 4 days is outside the 3-day window. A listed dependency is not a risk signal."
+    },
+    {
+      "ticket_id": "T-108",
+      "validation": { "valid": true, "issues": [] },
+      "risk": { "classification": "Medium", "scored": true, "findings": [
+        { "rule": "approaching_deadline", "classification": "Medium", "calculated": { "days_remaining": 3 }, "evidence_fields": ["status", "due_date"] }
+      ] },
+      "notes": "Boundary: exactly 3 days is inside the window. in_progress counts as active."
+    },
+    {
+      "ticket_id": "T-109",
+      "validation": { "valid": true, "issues": [] },
+      "risk": { "classification": "High", "scored": true, "findings": [
+        { "rule": "overdue", "classification": "High", "calculated": { "days_remaining": -2, "days_overdue": 2 }, "evidence_fields": ["status", "due_date"] }
+      ] }
+    },
+    {
+      "ticket_id": "T-110",
+      "validation": { "valid": false, "issues": [ { "field": "owner", "code": "missing", "scored": false, "pending_michelle": true } ] },
+      "risk": {
+        "classification": "pending Michelle", "scored": false,
+        "contract_reading": "Needs Human Review",
+        "findings": [
+          { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["owner"] },
+          { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 20 }, "evidence_fields": ["status", "due_date"] }
+        ]
+      },
+      "notes": "Owner null. Pending Michelle. Excluded from pass or fail."
+    },
+    {
+      "ticket_id": "T-111",
+      "validation": { "valid": false, "issues": [ { "field": "client_id", "code": "missing", "scored": true } ] },
+      "risk": { "classification": "Needs Human Review", "scored": true, "findings": [
+        { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["client_id"] },
+        { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 8 }, "evidence_fields": ["status", "due_date"] }
+      ] },
+      "notes": "The client must not be inferred from the title or description."
+    },
+    {
+      "ticket_id": "T-112",
+      "validation": { "valid": false, "issues": [ { "field": "dependencies[0]", "code": "contradictory", "scored": true } ] },
+      "risk": { "classification": "Needs Human Review", "scored": true, "findings": [
+        { "rule": "validation_contradictory", "classification": "Needs Human Review", "evidence_fields": ["dependencies[0]", "ticket_id", "status", "dependencies"] },
+        { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 11 }, "evidence_fields": ["status", "due_date"] }
+      ] },
+      "notes": "Contradiction: self-dependency."
+    },
+    {
+      "ticket_id": "T-113",
+      "validation": { "valid": false, "issues": [ { "field": "dependencies[1]", "code": "contradictory", "scored": true } ] },
+      "risk": { "classification": "Needs Human Review", "scored": true, "findings": [
+        { "rule": "validation_contradictory", "classification": "Needs Human Review", "evidence_fields": ["dependencies[1]", "ticket_id", "status", "dependencies"] },
+        { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 14 }, "evidence_fields": ["status", "due_date"] }
+      ] },
+      "notes": "Contradiction: duplicate dependency, flagged once at the second occurrence."
+    },
+    {
+      "ticket_id": "T-114",
+      "validation": { "valid": false, "issues": [ { "field": "dependencies", "code": "contradictory", "scored": true } ] },
+      "risk": { "classification": "Needs Human Review", "scored": true, "findings": [
+        { "rule": "validation_contradictory", "classification": "Needs Human Review", "evidence_fields": ["dependencies", "ticket_id", "status"] },
+        { "rule": "blocked", "classification": "High", "evidence_fields": ["status", "dependencies"] }
+      ] },
+      "notes": "Contradiction: blocked with an empty dependency list. The blocked High finding is kept, but the overall result is Needs Human Review, not High. Blocked tickets get no Low deadline finding."
+    },
+    {
+      "ticket_id": "T-115",
+      "validation": { "valid": true, "issues": [] },
+      "risk": { "classification": "Low", "scored": true, "findings": [
+        { "rule": "inactive", "classification": "Low", "evidence_fields": ["status"] }
+      ] },
+      "notes": "Completed. The past due date is ignored; no deadline rules apply."
+    },
+    {
+      "ticket_id": "T-116",
+      "validation": { "valid": true, "issues": [] },
+      "risk": { "classification": "Low", "scored": true, "findings": [
+        { "rule": "inactive", "classification": "Low", "evidence_fields": ["status"] }
+      ] },
+      "notes": "Cancelled. The near due date is ignored; no deadline rules apply."
+    },
+    {
+      "ticket_id": "T-117",
+      "validation": { "valid": false, "issues": [ { "field": "due_date", "code": "malformed", "scored": true } ] },
+      "risk": { "classification": "Needs Human Review", "scored": true, "findings": [
+        { "rule": "validation_malformed", "classification": "Needs Human Review", "evidence_fields": ["due_date"] }
+      ] },
+      "notes": "due_date 11/06/2026 is not YYYY-MM-DD. No deadline finding is produced from a malformed date."
+    },
+    {
+      "ticket_id": "T-118",
+      "validation": { "valid": false, "issues": [ { "field": "status", "code": "malformed", "scored": true } ] },
+      "risk": { "classification": "Needs Human Review", "scored": true, "findings": [
+        { "rule": "validation_malformed", "classification": "Needs Human Review", "evidence_fields": ["status"] }
+      ] },
+      "notes": "Status done is not one of the five values. No operational finding is produced from a malformed status."
+    },
+    {
+      "ticket_id": "T-119",
+      "validation": { "valid": true, "issues": [] },
+      "risk": { "classification": "Medium", "scored": true, "findings": [
+        { "rule": "approaching_deadline", "classification": "Medium", "calculated": { "days_remaining": 0 }, "evidence_fields": ["status", "due_date"] }
+      ] },
+      "notes": "Due today: 0 days remaining is inside the window."
+    },
+    {
+      "ticket_id": "T-120",
+      "validation": { "valid": true, "issues": [] },
+      "risk": { "classification": "Low", "scored": true, "findings": [
+        { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 27 }, "evidence_fields": ["status", "due_date"] }
+      ] }
+    }
+  ]
+}
