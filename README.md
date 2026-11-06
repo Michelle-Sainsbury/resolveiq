@@ -13,3 +13,7 @@ ResolveIQ is an AI-powered implementation issue monitoring agent that validates 
 4. **Client Portfolio Briefs:** As a Client Operations Specialist, I want a consolidated, client-specific portfolio brief so I can review implementation status, dependencies, and risks efficiently.
 
 5. **Human Oversight:** As an Implementation Manager, I want final control over ticket updates, priorities, escalations, and communications so ResolveIQ never takes unauthorized actions.
+
+## Status
+
+Nothing is built yet. Everything is planned or draft. ResolveIQ is read-only. The project planning document is still under review.
