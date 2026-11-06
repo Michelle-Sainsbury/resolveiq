@@ -130,3 +130,84 @@ Dependency IDs are references only: their existence and completion are not
 verified. A blocked status supports High without claiming a specific dependency
 caused it. Low means no elevated risk detected by these limited rules, not a
 guarantee of safety. No missing values or external facts are invented.
+
+## In-memory ticket normalization
+
+The complete suite passes 51 tests: the original 29 validation/risk tests plus
+22 normalization tests. Run it with the same unittest command above.
+
+The standard-library normalization adapters return independent envelopes with
+`ticket`, `source`, `raw_record`, `field_provenance`, and `normalization_issues`.
+They neither retrieve data nor open files. Source text is data, never instructions.
+
+- `normalize_json_ticket(record)` accepts a decoded synthetic JSON object. It
+  copies values without coercion, including extra fields. Absent keys stay
+  absent; explicit null stays `None`; blank strings stay blank; empty lists stay
+  empty. Invalid object inputs retain their raw value and produce a review issue.
+- `normalize_csv_tickets(text)` accepts CSV text and returns a list of envelopes.
+  Headers use the canonical field names without trimming or aliases. Ordinary
+  cells stay strings (including the literal `null`). Only nonblank dependency
+  cells are JSON-decoded and must contain a list or `null`. Use a CSV writer to
+  quote dependency lists containing commas or quotes. Blank dependency cells
+  remain blank and require validation review; `[]` confirms no dependencies.
+  Invalid dependency cells retain the original string and produce review issues.
+  Missing columns stay absent. Duplicate/blank headers, inconsistent row widths,
+  malformed CSV, empty input, and header-only input reject the entire input into
+  one review envelope retaining the original text. Duplicate ticket records are
+  not combined. `source.row` counts logical CSV records, with the header at 1,
+  so quoted multiline cells do not change record numbering.
+- `normalize_github_issue(record, repository="owner/repository")` accepts the
+  existing Cycle 2 reader's dictionary shape without importing that reader.
+  A positive integer issue number plus explicit repository context establishes
+  a qualified ID (`owner/repository#42`). A supplied non-null URL must match the
+  corresponding GitHub issue URL exactly; conflicts require review. Exactly one
+  nonblank assignee login maps to owner. Zero assignees means missing; multiple
+  assignees are ambiguous. Only `open` maps directly to status; `closed` and
+  unsupported values are preserved and flagged rather than mapped to completed
+  or cancelled. Client and dependency fields have no approved reader mapping and
+  stay absent, even if unexpected canonical fields appear in the supplied record.
+  Milestone deadlines remain raw evidence and never become ticket due dates.
+  Unexpected canonical ticket ID, owner, status, or due date fields produce
+  ambiguity/conflict flags without overriding reader evidence. Title,
+  description, labels, update timestamp, and URL are copied as extra metadata.
+
+Provenance records the transformation and source paths with `present` flags and
+original values. Normalization issues include field, code, explanation,
+`requires_human_review: true`, and source evidence. Raw records preserve
+contradictory candidates even when a field cannot be mapped. No value is filled
+with an invented `"Unknown"` placeholder. The adapter cannot recover distinctions
+the Cycle 2 reader already collapsed into empty lists or null.
+
+```python
+from datetime import date
+from resolveiq import normalize_json_ticket, assess_normalized_ticket
+
+envelope = normalize_json_ticket({
+    "ticket_id": "T-102", "client_id": "C-10", "owner": "Synthetic Owner",
+    "status": "open", "due_date": "2026-11-08", "dependencies": [],
+})
+assessment = assess_normalized_ticket(envelope, assessment_date=date(2026, 11, 5))
+# assessment["risk"]["classification"] == "Medium"
+```
+
+`assess_normalized_ticket` accepts adapter-generated envelopes and returns an
+independent normalized snapshot, the unchanged validator's result, and an
+enriched risk result. Use this wrapper rather than passing only `ticket` to the
+risk function: unresolved normalization issues force the overall classification
+to Needs Human Review even when the mapped ticket passes validation. Supported
+independent findings remain available; each risk finding gains `source_evidence`
+linking internal fields to provenance. Normalization issues are also included in
+the risk result. Assessment date and threshold have the existing risk API's
+requirements. Arbitrary or tampered envelope structures are not a supported API.
+
+Data-quality `requires_human_review` is distinct from operational approval.
+The wrapper and its risk result always report
+`operational_actions_require_human_approval: true`. No adapter or wrapper updates
+tickets, sends messages, invokes subprocesses, or accesses the network.
+
+Remaining integration decisions: approve a GitHub client/dependency source,
+closed-state mapping, and milestone-to-ticket deadline policy before enabling
+them. Agree on this evidence handoff with the portfolio brief consumer. Reader
+import, live retrieval, portfolio generation, and new risk rules are outside
+this implementation. GitHub reader records currently require review because
+those required-field mappings remain unresolved.
