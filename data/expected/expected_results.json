@@ -119,10 +119,11 @@
       "risk": {
         "classification": "Needs Human Review", "scored": true,
         "findings": [
-          { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["owner"] }
+          { "rule": "validation_missing", "classification": "Needs Human Review", "evidence_fields": ["owner"] },
+          { "rule": "outside_deadline_window", "classification": "Low", "calculated": { "days_remaining": 20 }, "evidence_fields": ["status", "due_date"] }
         ]
       },
-      "notes": "Owner null is a missing-field issue, so the overall result is Needs Human Review. No operational finding is expected. Not High: unassigned is not automatically High."
+      "notes": "Owner null is a missing-field issue, so the overall result is Needs Human Review. The Low outside_deadline_window finding (20 days remaining) is independently supported and retained; it is not an elevated risk. Not High: unassigned is not automatically High."
     },
     {
       "ticket_id": "T-111",
