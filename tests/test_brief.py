@@ -362,46 +362,128 @@ class SummaryTests(BriefTestBase):
                             for line in block))
 
 
+def finding_entry(rule, classification, *fields):
+    return {"rule": rule, "classification": classification, "fields": list(fields)}
+
+
 class ReviewItemTests(BriefTestBase):
-    def item(self, client_id, section, record, rules, review, normalization_issues=()):
-        return {"client_id": client_id, "section": section, "record": record, "rules": list(rules),
-                "normalization_issues": list(normalization_issues), "requires_human_review": review,
-                "operational_actions_require_human_approval": True}
+    def item(self, client_id, section, record, findings, review, normalization_issues=()):
+        return {"client_id": client_id, "section": section, "record": record,
+                "findings": list(findings), "normalization_issues": list(normalization_issues),
+                "requires_human_review": review, "operational_actions_require_human_approval": True}
 
     def test_review_items_list_high_and_human_review_tickets_per_client(self):
+        blocked = finding_entry("blocked", "High", "status", "dependencies")
         self.assertEqual(self.brief["review_items"], [
-            self.item("Client A", "high", ref(1, "T-1"), ["blocked"], False),
-            self.item("Client C", "high", ref(9, "T-9"), ["blocked"], False),
-            self.item("Client C", "human_review", ref(8, "T-8"), ["validation_contradictory"], True),
+            self.item("Client A", "high", ref(1, "T-1"), [blocked], False),
+            self.item("Client C", "high", ref(9, "T-9"), [blocked], False),
+            self.item("Client C", "human_review", ref(8, "T-8"), [
+                finding_entry("validation_contradictory", "Needs Human Review",
+                              "dependencies[0]", "ticket_id", "status", "dependencies"),
+                finding_entry("outside_deadline_window", "Low", "status", "due_date"),
+            ], True),
         ])
+
+    def test_a_missing_owner_with_an_overdue_date_lists_both_findings(self):
+        # T-106 style: owner null is a missing-field issue; 3 days overdue stays a retained High.
+        record = ticket("T-12", "Client E", "open", "2026-11-01", [], owner=None)
+        brief = build_portfolio_brief([assess(record)], assessment_date=TODAY)
+        self.assertEqual(brief["review_items"], [
+            self.item("Client E", "human_review", ref(1, "T-12"), [
+                finding_entry("validation_missing", "Needs Human Review", "owner"),
+                finding_entry("overdue", "High", "status", "due_date"),
+            ], True)])
+        counts = brief["clients"][0]["counts"]
+        self.assertEqual(counts["high"]["count"], 0)       # still not counted as High
+        self.assertEqual(counts["human_review"]["count"], 1)
+
+    def test_a_missing_owner_with_a_far_date_keeps_its_low_finding(self):
+        # T-110 style: 20 days remaining, not an elevated risk, still listed.
+        record = ticket("T-13", "Client E", "open", "2026-11-24", [], owner=None)
+        brief = build_portfolio_brief([assess(record)], assessment_date=TODAY)
+        self.assertEqual(brief["review_items"], [
+            self.item("Client E", "human_review", ref(1, "T-13"), [
+                finding_entry("validation_missing", "Needs Human Review", "owner"),
+                finding_entry("outside_deadline_window", "Low", "status", "due_date"),
+            ], True)])
+
+    def test_three_missing_fields_are_distinguishable(self):
+        # T-102 style: owner, due_date, and dependencies all missing.
+        record = ticket("T-14", "Client E", "open", None, None, owner=None)
+        brief = build_portfolio_brief([assess(record)], assessment_date=TODAY)
+        self.assertEqual(brief["review_items"], [
+            self.item("Client E", "human_review", ref(1, "T-14"), [
+                finding_entry("validation_missing", "Needs Human Review", "owner"),
+                finding_entry("validation_missing", "Needs Human Review", "due_date"),
+                finding_entry("validation_missing", "Needs Human Review", "dependencies"),
+            ], True)])
+        findings = brief["review_items"][0]["findings"]
+        self.assertEqual(len({f["rule"] for f in findings}), 1)               # same rule name three times
+        self.assertEqual(len({tuple(f["fields"]) for f in findings}), 3)      # told apart by field
 
     def test_medium_low_and_queue_records_are_not_review_items(self):
         positions = {item["record"]["batch_position"] for item in self.brief["review_items"]}
         self.assertEqual(positions, {1, 8, 9})
 
-    def test_rule_names_come_from_the_records_findings(self):
+    def test_items_list_the_records_own_findings_in_order(self):
         entries = {e["record"]["batch_position"]: e for e in self.all_entries()}
         for item in self.brief["review_items"]:
-            names = [f["rule"] for f in entries[item["record"]["batch_position"]]["findings"]]
-            self.assertTrue(item["rules"])
-            for rule in item["rules"]:
-                self.assertIn(rule, names)
+            own = entries[item["record"]["batch_position"]]["findings"]
+            expected = [finding_entry(f["rule"], f["classification"], *[e["field"] for e in f["evidence"]])
+                        for f in own]
+            self.assertTrue(expected)
+            self.assertEqual(item["findings"], expected)  # High and Human Review alike: all findings
+
+    def test_a_blocked_ticket_near_its_due_date_lists_both_findings(self):
+        # T-101 style: blocked (High) and due in 2 days (Medium). Both are listed, in the original order.
+        record = ticket("T-15", "Client E", "blocked", "2026-11-06", ["T-100"])
+        brief = build_portfolio_brief([assess(record)], assessment_date=TODAY)
+        self.assertEqual(brief["review_items"], [
+            self.item("Client E", "high", ref(1, "T-15"), [
+                finding_entry("blocked", "High", "status", "dependencies"),
+                finding_entry("approaching_deadline", "Medium", "status", "due_date"),
+            ], False)])
+        counts = brief["clients"][0]["counts"]
+        self.assertEqual(counts["high"]["count"], 1)      # counted once, as High
+        self.assertEqual(counts["medium"]["count"], 0)    # the Medium finding does not add a second count
+
+    def test_an_overdue_ticket_lists_its_one_finding(self):
+        # T-109 style: overdue High, nothing else.
+        record = ticket("T-16", "Client E", "open", "2026-11-02", [])
+        brief = build_portfolio_brief([assess(record)], assessment_date=TODAY)
+        self.assertEqual(brief["review_items"], [
+            self.item("Client E", "high", ref(1, "T-16"), [
+                finding_entry("overdue", "High", "status", "due_date")], False)])
+
+    def test_no_rule_name_appears_without_its_field(self):
+        for item in self.brief["review_items"]:
+            for found in item["findings"]:
+                self.assertTrue(found["fields"])
+                self.assertTrue(all(isinstance(name, str) and name for name in found["fields"]))
 
     def test_review_items_have_no_free_text(self):
-        allowed = {"client_id", "section", "record", "rules", "normalization_issues",
+        allowed = {"client_id", "section", "record", "findings", "normalization_issues",
                    "requires_human_review", "operational_actions_require_human_approval"}
         for item in self.brief["review_items"]:
             self.assertEqual(set(item), allowed)
             self.assertIn(item["section"], ("high", "human_review"))
-            self.assertTrue(all(isinstance(rule, str) for rule in item["rules"]))
             self.assertIs(item["operational_actions_require_human_approval"], True)
-        self.assertNotIn(INJECTION, json.dumps(self.brief["review_items"]))
+            for found in item["findings"]:
+                self.assertEqual(set(found), {"rule", "classification", "fields"})
+                self.assertIsInstance(found["rule"], str)
+                self.assertIsInstance(found["classification"], str)
+        dumped = json.dumps(self.brief["review_items"])
+        self.assertNotIn(INJECTION, dumped)
+        for entry in self.all_entries():
+            for found in entry["findings"]:
+                if found.get("explanation"):
+                    self.assertNotIn(found["explanation"], dumped)
 
     def test_review_items_are_deterministic(self):
         again = build_portfolio_brief(copy.deepcopy(self.assessments), assessment_date=TODAY)
         self.assertEqual(self.brief["review_items"], again["review_items"])
 
-    def test_normalization_only_review_is_listed_without_inventing_a_rule(self):
+    def test_normalization_only_review_is_listed_with_its_retained_finding(self):
         envelope = normalize_json_ticket(ticket("T-11", "Client E", "open", "2026-12-20", []))
         envelope["normalization_issues"].append({
             "field": "status", "code": "ambiguous", "message": "free text must not be copied",
@@ -409,7 +491,8 @@ class ReviewItemTests(BriefTestBase):
         assessment = assess_normalized_ticket(envelope, assessment_date=TODAY)
         brief = build_portfolio_brief([assessment], assessment_date=TODAY)
         self.assertEqual(brief["review_items"], [
-            self.item("Client E", "human_review", ref(1, "T-11"), [], True,
+            self.item("Client E", "human_review", ref(1, "T-11"),
+                      [finding_entry("outside_deadline_window", "Low", "status", "due_date")], True,
                       [{"field": "status", "code": "ambiguous"}])])
         self.assertNotIn("free text must not be copied", json.dumps(brief["review_items"]))
 
@@ -421,7 +504,7 @@ class ReviewItemTests(BriefTestBase):
         for item in self.brief["review_items"]:
             self.assertIn(
                 f"- Client {code(item['client_id'])}, section {code(item['section'])}, "
-                f"record {code(item['record'])}, rules {code(item['rules'])}, "
+                f"record {code(item['record'])}, findings {code(item['findings'])}, "
                 f"normalization issues {code(item['normalization_issues'])}", block)
 
     def test_empty_batch_has_no_review_items(self):

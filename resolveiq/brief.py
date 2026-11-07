@@ -26,9 +26,13 @@ High, Medium, Low, and Human Review counts, and the size of the batch review
 queue. Each count carries the records counted, like every other count.
 
 Review items: for each client, the High tickets and then the Human Review
-tickets, each as a record reference with the rule names from its own findings
-(High findings for a High ticket, Needs Human Review findings for a Human Review
-ticket) and the field and code of any normalization issue. No free text.
+tickets, each as a record reference with findings and the field and code of any
+normalization issue. A finding entry is the rule name, its classification, and
+the fields its evidence cites, so a rule name never appears without its field.
+Every item lists all of its ticket's findings in their original order, so a High
+ticket also shows a Medium deadline finding, and a Human Review ticket also
+shows an independently supported one such as an overdue High finding on a ticket
+with a missing owner. No free text.
 
 Ordering: clients are sorted by client_id; records keep batch order. In the JSON,
 summary and review_items come first and all other keys are sorted.
@@ -162,7 +166,7 @@ def render_brief_markdown(brief):
         for item in brief["review_items"]:
             lines.append(
                 f"- Client {_code(item['client_id'])}, section {_code(item['section'])}, "
-                f"record {_code(item['record'])}, rules {_code(item['rules'])}, "
+                f"record {_code(item['record'])}, findings {_code(item['findings'])}, "
                 f"normalization issues {_code(item['normalization_issues'])}")
     else:
         lines.append("None.")
@@ -273,14 +277,16 @@ def _verified_client(ticket, validation_issues, normalization_issues):
 def _review_items(clients):
     items = []
     for client in clients:
-        for section, classification in (("high", "High"), ("human_review", _REVIEW)):
+        for section in ("high", "human_review"):
             for entry in client["sections"][section]:
                 items.append({
                     "client_id": client["client_id"],
                     "section": section,
                     "record": deepcopy(entry["record"]),
-                    "rules": [finding["rule"] for finding in entry["findings"]
-                              if finding["classification"] == classification],
+                    "findings": [{"rule": finding["rule"],
+                                  "classification": finding["classification"],
+                                  "fields": [item.get("field") for item in finding["evidence"]]}
+                                 for finding in entry["findings"]],
                     "normalization_issues": [{"field": issue.get("field"), "code": issue.get("code")}
                                              for issue in entry["normalization_issues"]],
                     "requires_human_review": entry["requires_human_review"],
