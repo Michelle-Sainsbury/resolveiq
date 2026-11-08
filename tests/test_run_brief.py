@@ -3,6 +3,8 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -178,6 +180,139 @@ class RunBriefTests(unittest.TestCase):
                                         "resolveiq", "resolveiq.brief"})
         self.assertFalse(names & {"today", "now", "environ", "getenv", "urlopen", "Popen",
                                   "system", "socket", "request"})
+
+
+class OutputCollisionTests(unittest.TestCase):
+    """The tickets file must never be the same file as brief.json or brief.md."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.dir = Path(temporary.name)
+        self.out = self.dir / "out"
+        self.out.mkdir()
+        self.original = json.dumps(fixture_records()).encode("utf-8")
+        self.module = load_script()
+
+    def reset(self):
+        """Start a case from an empty directory so one case cannot leak into the next."""
+        for child in self.dir.iterdir():
+            if child.is_symlink() or child.is_file():
+                child.unlink()
+            else:
+                shutil.rmtree(child)
+        self.out.mkdir()
+
+    def place(self, path):
+        path.write_bytes(self.original)
+        return path
+
+    def tree(self):
+        return {path.relative_to(self.dir).as_posix():
+                (path.is_symlink(), None if path.is_dir() else path.read_bytes())
+                for path in sorted(self.dir.rglob("*"))}
+
+    def assert_refused(self, tickets, out, input_path, *, cwd=None):
+        """Run the runner; it must exit 1, write nothing, and leave the input's bytes alone."""
+        before = self.tree()
+        writes = []
+        if cwd is None:
+            stderr = io.StringIO()
+            with recorded_writes() as writes, contextlib.redirect_stdout(io.StringIO()), \
+                    contextlib.redirect_stderr(stderr):
+                code = self.module.main(["--date", "2026-11-04", "--tickets", str(tickets),
+                                         "--out", str(out)])
+            message = stderr.getvalue()
+        else:
+            done = subprocess.run([sys.executable, "-B", str(SCRIPT), "--date", "2026-11-04",
+                                   "--tickets", str(tickets), "--out", str(out)],
+                                  cwd=cwd, capture_output=True, text=True)
+            code, message = done.returncode, done.stderr
+        self.assertEqual(code, 1, message)
+        self.assertIn("same file", message)
+        self.assertEqual(writes, [])
+        self.assertEqual(input_path.read_bytes(), self.original)
+        self.assertEqual(self.tree(), before)  # no output file was created, changed or removed
+
+    def test_tickets_file_that_is_brief_json_is_refused(self):
+        tickets = self.place(self.out / "brief.json")
+        self.assert_refused(tickets, self.out, tickets)
+        self.assertFalse((self.out / "brief.md").exists())
+
+    def test_tickets_file_that_is_brief_md_is_refused(self):
+        tickets = self.place(self.out / "brief.md")
+        self.assert_refused(tickets, self.out, tickets)
+        self.assertFalse((self.out / "brief.json").exists())
+
+    def test_symlinked_output_names_are_refused(self):
+        for name in ("brief.json", "brief.md"):
+            with self.subTest(name=name):
+                self.reset()
+                real = self.place(self.dir / f"real-{name}")
+                try:
+                    (self.out / name).symlink_to(real)
+                except (OSError, NotImplementedError):
+                    self.skipTest("symlinks are not available here")
+                self.assert_refused(real, self.out, real)
+
+    def test_symlinked_tickets_argument_is_refused(self):
+        for name in ("brief.json", "brief.md"):
+            with self.subTest(name=name):
+                self.reset()
+                real = self.place(self.out / name)
+                link = self.dir / f"link-{name}"
+                try:
+                    link.symlink_to(real)
+                except (OSError, NotImplementedError):
+                    self.skipTest("symlinks are not available here")
+                self.assert_refused(link, self.out, real)
+
+    def test_symlinked_output_directory_is_refused(self):
+        tickets = self.place(self.out / "brief.json")
+        alias = self.dir / "out-alias"
+        try:
+            alias.symlink_to(self.out, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks are not available here")
+        self.assert_refused(tickets, alias, tickets)
+
+    def test_hard_linked_output_names_are_refused(self):
+        for name in ("brief.json", "brief.md"):
+            with self.subTest(name=name):
+                self.reset()
+                real = self.place(self.dir / f"real-{name}")
+                try:
+                    os.link(real, self.out / name)
+                except (OSError, NotImplementedError, AttributeError):
+                    self.skipTest("hard links are not available here")
+                self.assert_refused(real, self.out, real)
+
+    def test_dot_dot_paths_are_refused(self):
+        tickets = self.place(self.out / "brief.json")
+        self.assert_refused(self.dir / "out" / ".." / "out" / "brief.json", self.out, tickets)
+        self.assert_refused(tickets, self.dir / "out" / ".." / "out", tickets)
+
+    def test_relative_and_absolute_spellings_are_refused(self):
+        cases = (("brief.json", "out/brief.json", str(self.out)),              # relative tickets, absolute out
+                 ("brief.json", str(self.out / "brief.json"), "out"),           # absolute tickets, relative out
+                 ("brief.md", "./out/../out/brief.md", "./out"),                # both relative, with ..
+                 ("brief.md", "out/brief.md", str(self.out / ".." / "out")))   # relative tickets, .. in out
+        for name, tickets, out in cases:
+            with self.subTest(tickets=tickets, out=out):
+                self.reset()
+                input_path = self.place(self.out / name)
+                self.assert_refused(tickets, out, input_path, cwd=self.dir)
+
+    def test_a_different_existing_brief_is_still_overwritten(self):
+        tickets = self.place(self.dir / "tickets.json")
+        (self.out / "brief.json").write_text("old", encoding="utf-8")
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            code = self.module.main(["--date", "2026-11-04", "--tickets", str(tickets),
+                                     "--out", str(self.out)])
+        self.assertEqual(code, 0)
+        self.assertEqual(tickets.read_bytes(), self.original)
+        self.assertNotEqual((self.out / "brief.json").read_text(encoding="utf-8"), "old")
+        self.assertTrue((self.out / "brief.md").is_file())
 
 
 if __name__ == "__main__":
