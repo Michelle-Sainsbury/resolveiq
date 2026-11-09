@@ -38,8 +38,10 @@ use the server for its scoped data API. There are no production data connections
 ## User flows
 
 - **Dashboard:** Actual classification totals, active-ticket facts, overdue
-  findings, unassigned owners, listed dependencies, intake gaps, and flagged
-  tickets. A separate signal calls out review tickets that retain a High finding.
+  findings, owner-information gaps, listed dependencies, intake gaps, and flagged
+  tickets. Owner counts distinguish absent, null, blank, and malformed values;
+  none establishes whether work is genuinely unassigned. A separate signal calls
+  out review tickets that retain a High finding.
 - **Ticket intake:** Paste or read a local synthetic JSON/CSV file, choose an
   explicit assessment date, and validate/assess a temporary preview. The server
   uses normalize_json_ticket/normalize_csv_tickets, assess_normalized_ticket, and
@@ -53,11 +55,22 @@ use the server for its scoped data API. There are no production data connections
   for source description, required fields, validation and normalization issues,
   all independent findings, exact evidence values, calculations, and provenance.
   Missing, null, blank, empty dependency lists, and malformed values are distinct.
+  Each supported validation issue includes field-specific human clarification
+  guidance. Guidance never fills a value or grants operational approval.
+  Dependency references can open matching records already in the selected scope,
+  with a Back button to return. Duplicate IDs require selecting a specific batch
+  record; self-references are labeled. Unavailable references remain unverified,
+  and navigation never searches another client's records or retrieves new data.
 - **Bottlenecks:** Read supported elevated findings and data-quality review cases.
   Dependency references never imply that the referenced work exists or is blocked.
-- **Reports:** View and download only the selected client's portfolio JSON or
-  Markdown. Queue reports contain only unassigned-client records. Text is shown
-  literally rather than interpreted as HTML. Downloads send no communications.
+- **Reports:** Read classification totals and per-ticket explanations, owner/date
+  information, dependency references, and review guidance. Expand evidence and
+  provenance for each finding, or expand the full assessed record. These views
+  present existing assessments; they add no classification or priority rules.
+  The full original Markdown is available in a separate expandable section.
+  JSON and Markdown downloads use the unchanged Python renderer/serializer and
+  contain only the selected client or batch queue. Text is shown literally
+  rather than interpreted as HTML. Downloads send no communications.
 - **Settings:** Read the actual assessment date/window, approval requirements,
   current rules, and backend limitations.
 
@@ -85,10 +98,12 @@ security review. A user can intentionally select any synthetic client in this de
 
 ## PRD coverage and remaining backend work
 
-Reference inspected: [Cycle 4 Agent Improvement PRD](https://docs.google.com/document/d/1NK-0_ei3Iy-sZCoRORJJXFVB6yD8mbcngOEt8oSkHTY/edit).
-The accessible PRD is a working draft dated November 3. Its peer-review appendix
-contains provisional priority rules that differ from the subsequently approved
-Python implementation. This dashboard preserves the existing implementation.
+Reference: [final Cycle 4 PRD, including Michelle's November 6 addendum](https://docs.google.com/document/d/1iYFLwFtpr7pozyqauT2cjJV0y0HLzZCE7f_IbXQBJFI/edit).
+The November 9 audit distinguishes the agreed synthetic portfolio MVP from
+pending proposals and future enhancements. The final PRD defers a full dashboard;
+Michelle separately authorized this browser interface and its improvements.
+This interface preserves the approved Python rules. Fourteen-day inactivity
+belongs to the separate Cycle 2 path, and its integration remains a joint decision.
 
 | PRD area | Status |
 | --- | --- |
@@ -135,5 +150,7 @@ Start the dashboard with the fixture date 2026-11-04 first. Set DASHBOARD_URL fo
 another port, and CHROME_PATH for a different Chrome executable location. The
 browser suite covers navigation, client isolation (including delayed responses),
 ticket dialogs, report downloads, intake previews, injection text, filters, and
-mobile layout. It intentionally evaluates the UI; it is not a statistical accuracy
+mobile layout. It also checks owner distinctions, field-specific guidance,
+dependency navigation and ambiguity, exact expandable record preservation, and
+unchanged Markdown downloads. It intentionally evaluates the UI; it is not a statistical accuracy
 or usability study. The default Chrome path is the macOS Applications path.
