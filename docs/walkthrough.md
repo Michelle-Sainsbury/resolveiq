@@ -2,7 +2,7 @@
 
 **What this shows:** a batch of 20 synthetic tickets turned into a portfolio brief per client. It does not use real tickets, and it does not call GitHub.
 
-**Before you start** (macOS or Linux, in bash or zsh):
+**Before you start** (tested on macOS with zsh; other systems not tested):
 - **Python 3.** The runner uses only the standard library, so there is nothing to install. It was tested here with Python 3.14.8.
 - **The right branch.** The runner was added by PR #6, which is merged into `feature/resolveiq-build`, not `main`. `main` does not have `scripts/run_brief.py`. In a clone of `Michelle-Sainsbury/resolveiq`, check out that branch:
   ```
