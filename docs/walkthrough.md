@@ -2,17 +2,30 @@
 
 **What this shows:** a batch of 20 synthetic tickets turned into a portfolio brief per client. It does not use real tickets, and it does not call GitHub.
 
-**Requires** the runner from PR #6 (not yet merged). Until it is, the runner is on branch `huma/brief-runner-pr`.
+**Before you start** (macOS or Linux, in bash or zsh):
+- **Python 3.** The runner uses only the standard library, so there is nothing to install. It was tested here with Python 3.14.8.
+- **The right branch.** The runner was added by PR #6, which is merged into `feature/resolveiq-build`, not `main`. `main` does not have `scripts/run_brief.py`. In a clone of `Michelle-Sainsbury/resolveiq`, check out that branch:
+  ```
+  git clone https://github.com/Michelle-Sainsbury/resolveiq.git
+  cd resolveiq
+  git switch feature/resolveiq-build
+  ```
+  If you already have a clone, run `git fetch origin`, then `git switch feature/resolveiq-build` and `git pull`.
+- **The repository root.** Run every command below from the `resolveiq` folder (the one that contains `scripts/` and `data/`).
 
-**1. Run it.** `python3 scripts/run_brief.py --date 2026-11-04 --out <output folder>`. The date is always given, never read from the clock. Running it twice gives byte-identical output.
+**1. Run it.** From the repository root, copy and paste:
+```
+python3 scripts/run_brief.py --date 2026-11-04 --out /tmp/resolveiq-brief-output
+```
+It reads `data/tickets/tickets.json` and prints the two files it wrote: `/tmp/resolveiq-brief-output/brief.md` (the readable brief) and `/tmp/resolveiq-brief-output/brief.json` (the same brief as structured data). Open `brief.md` in any text editor, or on macOS run `open /tmp/resolveiq-brief-output/brief.md`. The date is always given, never read from the clock. Running it twice gives byte-identical output.
 
 **2. Read the header.** Assessment date, the 3-day approaching-deadline window, "Requires human review: yes," "Operational actions require human approval: yes." *Say:* it only reports. A person decides what to do.
 
 **3. Read the Summary.** Per client: High / Medium / Low / Human Review counts, plus the batch review queue. *Say:* Client A has 2 High, 1 Medium, 4 Low and 3 for review. Client B has 0 High, 1 Medium, 2 Low and 5 for review.
 
-**4. Three tickets to point at.**
+**4. Three examples to point at.**
 - **T-101** (Client A): blocked, so High, and it is also near its deadline. Both findings are kept.
-- **T-106 and T-114**: a ticket in Human Review can also carry a High finding (overdue; blocked). *Say:* read Review items, not just the counts.
+- **T-106 and T-114**: a ticket in Human Review can also carry a High finding. T-106 (Client B) has no owner, so its overall classification is Human Review, but its overdue High finding is kept. That is why Client B shows High: 0 in the counts. T-114 (Client A) has contradictory data, so it is also in Human Review, and its blocked High finding is kept. *Say:* read Review items, not just the counts.
 - **T-111**: no client ID, so it goes to the batch review queue and is not guessed into a client.
 
 **5. What not to claim.** The 20 of 20 match uses expected results we computed from the same rules, so it is not independent accuracy. Nothing here measures time saved. Real GitHub issues all go to human review until a field mapping is approved.
