@@ -1,34 +1,232 @@
-# resolveiq
-ResolveIQ is an AI-powered implementation issue monitoring agent that validates incoming tickets, assesses operational risks using documented evidence, and generates client-specific portfolio briefs with human oversight.
+# ResolveIQ
 
+## Problem
 
-## User Stories
+Implementation managers and client operations teams often manage multiple tickets across different clients, making it difficult to identify missing information, approaching deadlines, unresolved blockers, and operational risks before they disrupt delivery.
 
-1. **Ticket Validation:** As an Implementation Manager, I want ResolveIQ to identify missing or contradictory ticket information so I can resolve issues before they affect implementation progress.
+ResolveIQ addresses this challenge by validating ticket information, identifying evidence-based risks, and generating client-specific portfolio briefs that help teams prioritize human review.
 
-2. **Risk Assessment:** As a Program Operations Specialist, I want evidence-based risk classifications so I can identify potential blockers and determine which issues require attention.
+By bringing these findings into one place, ResolveIQ helps implementation teams make more informed decisions while keeping final approvals, escalations, and communications under human control.
 
-3. **Human Review:** As an Implementation Manager, I want incomplete or uncertain assessments flagged for human review so I can make informed decisions without relying on unsupported conclusions.
+## Solution
 
-4. **Client Portfolio Briefs:** As a Client Operations Specialist, I want a consolidated, client-specific portfolio brief so I can review implementation status, dependencies, and risks efficiently.
+ResolveIQ is a Python decision-support prototype for reviewing a batch of tickets
+and turning their recorded facts into a portfolio brief for each client. Its
+current workflow is deterministic and uses Python's standard library; no LLM,
+API key, or live service connection is needed to run the synthetic-data demo.
 
-5. **Human Oversight:** As an Implementation Manager, I want final control over ticket updates, priorities, escalations, and communications so ResolveIQ never takes unauthorized actions.
+The project was inspired by the operational responsibilities in
+[Gradient AI's Program Operations Specialist job description](https://job-boards.greenhouse.io/gradientai/jobs/8034609003),
+including client portfolio tracking, cross-team coordination, and reporting on
+timelines, dependencies, risks, and bottlenecks. ResolveIQ explores a possible
+improvement to that work. The problem statement is a project hypothesis, not a
+confirmed account of Gradient AI's internal processes.
 
-## Status
+1. **Normalize** supported source records without filling in missing information.
+2. **Validate** required fields and defined contradictions.
+3. **Assess risk** with an explicit date and evidence-backed rules.
+4. **Build client briefs** containing classifications, findings, source evidence,
+   and items needing human review.
 
-Implemented locally: `validate_ticket` checks required ticket fields, formats,
-and contradictions without inventing values. `assess_ticket_risk` produces
-High, Medium, Low, or Needs Human Review outcomes with field-level evidence,
-an explicit assessment date, and a configurable 3-calendar-day deadline window.
-Data-quality review is separate from human approval for all operational actions.
+The shared branch includes normalization, validation, risk assessment, portfolio
+brief generation, and a command-line reporting runner. This README covers
+`feature/resolveiq-build`. The browser dashboard is developed separately on
+`michelle/dashboard` and is not part of this branch.
 
-The complete automated suite passed all 29 tests on November 6, 2026, covering
-validation, risk classification, deadline boundaries, evidence, and unchanged
-inputs. Portfolio brief generation remains unimplemented. The project planning
-document is still under review. ResolveIQ remains read-only toward operational
-systems: these functions do not update tickets or send communications.
+## Features
 
-## Ticket validation
+- **Ticket intake validation:** Checks ticket ID, client ID, owner, status, due
+  date, and dependencies; flags missing, malformed, or contradictory information.
+- **Four classifications:** High, Medium, Low, and Needs Human Review. The default
+  approaching-deadline window is three calendar days, inclusive.
+- **Evidence explanations:** Risk findings retain supporting fields, recorded
+  values, date calculations where applicable, and source provenance.
+- **Client portfolio briefs:** Group records by a valid, unflagged client ID;
+  keep incomplete tickets in that client's Human Review section and put records
+  without a verified client ID in a separate batch review queue.
+- **Preserved context:** Keep supported independent findings even when a ticket
+  needs review. Missing owner information can coexist with an overdue High finding.
+- **Repeatable reporting:** Produce JSON and Markdown from the same assessed
+  batch without modifying source tickets or executing operational actions.
+
+The library includes adapters for decoded JSON, CSV text, and Cycle 2 GitHub
+reader dictionaries. The reporting runner reads a **JSON array**; it does not
+fetch GitHub issues or accept CSV files directly.
+
+## Contributions
+
+ResolveIQ is a collaborative project by **Michelle Sainsbury and Huma Ali**.
+
+- **Michelle Sainsbury:** Led ticket validation and risk assessment
+  ([PR #2](https://github.com/Michelle-Sainsbury/resolveiq/pull/2)), normalization
+  and review gating ([PR #3](https://github.com/Michelle-Sainsbury/resolveiq/pull/3)),
+  and the separate dashboard implementation and usability refinements
+  ([PR #8](https://github.com/Michelle-Sainsbury/resolveiq/pull/8)).
+- **Huma Ali:** Led synthetic fixtures and expected results
+  ([PR #4](https://github.com/Michelle-Sainsbury/resolveiq/pull/4)), evidence-preserving
+  portfolio reporting ([PR #5](https://github.com/Michelle-Sainsbury/resolveiq/pull/5)),
+  the reporting runner and collision-protection tests
+  ([PR #6](https://github.com/Michelle-Sainsbury/resolveiq/pull/6)), and the walkthrough
+  and sample brief ([PR #7](https://github.com/Michelle-Sainsbury/resolveiq/pull/7)).
+
+Huma reviewed the validation and normalization PRs; Michelle integrated the
+merged implementation PRs into the shared build branch. The linked PRs retain
+the implementation, test, and review history.
+
+## Setup
+
+Verified on macOS with Python **3.9.6**. Requirements:
+
+- Python 3 and Git installed.
+- Authorized repository access while the repository is private. Configure SSH
+  access or HTTPS authentication before cloning; no credentials belong in files.
+- No third-party Python packages are required.
+
+Using an existing authorized SSH key:
+
+```sh
+git clone git@github.com:Michelle-Sainsbury/resolveiq.git
+cd resolveiq
+git switch feature/resolveiq-build
+```
+
+With HTTPS authentication already configured, the clone URL is
+`https://github.com/Michelle-Sainsbury/resolveiq.git`. In an existing clone,
+check for local work before changing branches. `main` currently does not contain
+the implementation described here.
+
+Run the following commands from the repository root, which contains `scripts/`,
+`resolveiq/`, `data/`, and `tests/`.
+
+## Demo
+
+**No installation needed:** [Read the existing sample portfolio brief](https://github.com/Michelle-Sainsbury/resolveiq/blob/63fd63563815785cc290e224364f3e7bb9c780d8/docs/sample/brief.md)
+from PR #7. This commit-pinned link works independently of which branch displays
+this README. Repository access is required while the project is private.
+
+The demo uses the repository's **20 synthetic tickets**, assessed on **November 4,
+2026**, with the default **three-day** deadline window. It requires no live data.
+
+On macOS/zsh, create a fresh temporary output folder and run:
+
+```sh
+resolveiq_demo_dir="$(mktemp -d)"
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_brief.py \
+  --date 2026-11-04 --out "$resolveiq_demo_dir"
+printf 'Reports: %s\n' "$resolveiq_demo_dir"
+```
+
+Open `brief.md` in that folder with a text editor. `brief.json` contains the
+structured report, including full records and provenance. The date must be
+provided explicitly; the runner never substitutes today's date.
+
+Verified results for this dataset and assessment date:
+
+| Scope | High | Medium | Low | Needs Human Review | Total |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Client A | 2 | 1 | 4 | 3 | 10 |
+| Client B | 0 | 1 | 2 | 5 | 8 |
+| Client C | 0 | 0 | 1 | 0 | 1 |
+| Batch review queue | 0 | 0 | 0 | 1 | 1 |
+| **Overall** | **2** | **2** | **7** | **9** | **20** |
+
+Examples worth inspecting:
+
+- **T-101:** High because its status is blocked; a separate Medium finding
+  records that its deadline is two days away.
+- **T-106:** Needs Human Review because its owner is null, while its overdue High
+  finding remains visible. This explains why Client B's primary High count is zero.
+- **T-114:** Needs Human Review because blocked status conflicts with an empty
+  dependency list; the supported blocked High finding is retained.
+- **T-111:** Missing client ID sends the record to the batch review queue rather
+  than an assumed client.
+
+To use another approved synthetic JSON batch:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_brief.py \
+  --date 2026-11-04 --tickets /path/to/synthetic-tickets.json \
+  --out /path/to/new-report-directory
+```
+
+Replace the example paths before running. The runner creates the output directory
+if needed and overwrites existing `brief.json`/`brief.md` reports there. It refuses
+input/output collisions, including symlinks and hard links, to protect the input.
+Exit codes are `0` for success, `1` for unusable input/output, and `2` for invalid
+command-line arguments.
+
+## Testing
+
+Run the complete suite from the repository root:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+```
+
+Verified on **November 10, 2026**, in an isolated copy of shared-branch commit
+`39d9dcae9c2c2d39a629b9ff5155b59588b0a088`, using Python 3.9.6:
+
+| Area | Tests passed |
+| --- | ---: |
+| Validation | 14 |
+| Risk assessment | 15 |
+| Normalization | 22 |
+| Portfolio brief | 43 |
+| Reporting runner | 21 |
+| **Total** | **115** |
+
+There were **0 failures, 0 errors, and 0 skipped tests**. Tests cover required
+fields, deadline boundaries, contradictory dependencies, review precedence,
+evidence preservation, client grouping, deterministic output, source immutability,
+and input/output collision protection.
+
+The synthetic demo was also executed during this check and produced both report
+files with the totals shown above. These checks demonstrate tested behavior on
+controlled data; they do not establish independently measured accuracy, production
+performance, or time savings.
+
+## Limitations
+
+- **Synthetic-data prototype:** No real customer systems, Salesforce, Jira, live
+  GitHub retrieval, or automated communications are connected to this workflow.
+- **Limited risk rules:** High is supported by blocked status or an overdue date.
+  Low means no elevated signal under these rules, not a guarantee of safety.
+  Fourteen-day inactivity monitoring belongs to the separate Cycle 2 path.
+- **Dependency references only:** The system does not verify referenced tickets'
+  existence, completion, or causal relationship to a blocker. Some dependency
+  lists remain in JSON but are omitted from the current Markdown view.
+- **Known contradiction gap:** T-103's structured client ID conflicts with its
+  description. The implemented rules do not detect that text-level discrepancy.
+- **Unresolved GitHub mappings:** Client ID, dependencies, and due date have no
+  approved mapping from reader dictionaries. Milestone dates are not assumed to
+  be ticket deadlines; closed issues are not assumed completed or cancelled.
+- **Owner information:** Missing or null owner data requires review. It does not
+  establish whether a ticket is genuinely unassigned.
+- **Report output failures:** If the second report file cannot be written, the
+  runner can leave the first report file in the output directory. Check the exit
+  status and both outputs before using them.
+- **Evaluation still pending:** Independent outcome/evidence scoring, the separate
+  Cycle 2 regression evaluation, and manual-versus-assisted timing remain outside
+  the verified results reported here.
+
+## Human oversight
+
+ResolveIQ provides decision-support information. It does not assign work,
+automatically rank operational priorities, approve escalations, change tickets,
+or send communications. A human reviews the evidence and decides any follow-up
+in their own authorized workflow.
+
+`requires_human_review` flags missing, malformed, contradictory, or uncertain
+data. It is separate from `operational_actions_require_human_approval`, which is
+always true, including for valid High, Medium, and Low outcomes. No classification
+or report grants approval to act. Ticket text is treated as data, not instructions.
+
+## Technical reference
+
+<details>
+<summary>Ticket schema, Python APIs, normalization behavior, and existing user stories</summary>
+
+### Ticket validation
 
 `from resolveiq import validate_ticket` validates a decoded JSON object using
 Python's standard library. Pass `json.loads(...)` when starting with JSON text.
@@ -71,13 +269,7 @@ result = validate_ticket({
 # {"valid": True, "requires_human_review": False, "issues": []}
 ```
 
-Run the automated tests from the repository root:
-
-```sh
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
-```
-
-## Evidence-based risk assessment
+### Evidence-based risk assessment
 
 `assess_ticket_risk(ticket, *, assessment_date, approaching_deadline_days=3)`
 uses an explicit `datetime.date` and a configurable non-negative integer
@@ -131,10 +323,7 @@ verified. A blocked status supports High without claiming a specific dependency
 caused it. Low means no elevated risk detected by these limited rules, not a
 guarantee of safety. No missing values or external facts are invented.
 
-## In-memory ticket normalization
-
-The complete suite passes 51 tests: the original 29 validation/risk tests plus
-22 normalization tests. Run it with the same unittest command above.
+### In-memory ticket normalization
 
 The standard-library normalization adapters return independent envelopes with
 `ticket`, `source`, `raw_record`, `field_provenance`, and `normalization_issues`.
@@ -156,7 +345,7 @@ They neither retrieve data nor open files. Source text is data, never instructio
   one review envelope retaining the original text. Duplicate ticket records are
   not combined. `source.row` counts logical CSV records, with the header at 1,
   so quoted multiline cells do not change record numbering.
-- `normalize_github_issue(record, repository="owner/repository")` accepts the
+- `normalize_github_issue(record, *, repository)` accepts the
   existing Cycle 2 reader's dictionary shape without importing that reader.
   A positive integer issue number plus explicit repository context establishes
   a qualified ID (`owner/repository#42`). A supplied non-null URL must match the
@@ -205,9 +394,47 @@ The wrapper and its risk result always report
 `operational_actions_require_human_approval: true`. No adapter or wrapper updates
 tickets, sends messages, invokes subprocesses, or accesses the network.
 
-Remaining integration decisions: approve a GitHub client/dependency source,
-closed-state mapping, and milestone-to-ticket deadline policy before enabling
-them. Agree on this evidence handoff with the portfolio brief consumer. Reader
-import, live retrieval, portfolio generation, and new risk rules are outside
-this implementation. GitHub reader records currently require review because
-those required-field mappings remain unresolved.
+Remaining GitHub integration decisions include an approved client/dependency
+source, closed-state interpretation, and a milestone-to-ticket deadline policy.
+The portfolio consumer is implemented in `resolveiq/brief.py` and accepts complete
+`assess_normalized_ticket` outputs. Live reader retrieval and new risk rules are
+outside the current workflow. GitHub reader records currently require review
+because required-field mappings remain unresolved.
+
+### Portfolio reporting
+
+`build_portfolio_brief(assessments, *, assessment_date)` in `resolveiq.brief`
+accepts a list of complete `assess_normalized_ticket` outputs and an explicit
+`datetime.date`. Assessments must share that date and the same deadline window.
+It returns a JSON-serializable dictionary with `summary`, `review_items`,
+per-client `sections` and counts, a `batch_review_queue`, assessment settings,
+and the human-review/approval flags. Record references retain batch position
+and a ticket ID when one is available; no missing ID is generated.
+
+`brief_to_json(brief)` serializes the dictionary deterministically.
+`render_brief_markdown(brief)` creates its Markdown view. Import these functions
+from `resolveiq.brief`. The library performs no file writes; `scripts/run_brief.py`
+handles reading the JSON batch and writing the two report files.
+
+Review items list High and Human Review records with all their findings, rule
+names, classifications, and supporting field references. Medium and Low records
+remain in their respective client sections. Client IDs are checked for structure
+and validation/normalization flags, not verified against an external client
+directory or user-permission system.
+
+### Existing user stories
+
+1. **Ticket Validation:** As an Implementation Manager, I want ResolveIQ to identify missing or contradictory ticket information so I can resolve issues before they affect implementation progress.
+
+2. **Risk Assessment:** As a Program Operations Specialist, I want evidence-based risk classifications so I can identify potential blockers and determine which issues require attention.
+
+3. **Human Review:** As an Implementation Manager, I want incomplete or uncertain assessments flagged for human review so I can make informed decisions without relying on unsupported conclusions.
+
+4. **Client Portfolio Briefs:** As a Client Operations Specialist, I want a consolidated, client-specific portfolio brief so I can review implementation status, dependencies, and risks efficiently.
+
+5. **Human Oversight:** As an Implementation Manager, I want final control over ticket updates, priorities, escalations, and communications so ResolveIQ never takes unauthorized actions.
+
+The existing stories above are retained for traceability. The final PRD leaves
+reconciliation of the canonical user-story list pending joint review.
+
+</details>
