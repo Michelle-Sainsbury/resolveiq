@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ResolveIQ · Client operations</title><link rel="stylesheet" href="/styles.css"><script src="/app.js" defer></script></head>
+<body>
+<a href="#main" class="skip">Skip to content</a>
+<aside class="sidebar" aria-label="Application navigation">
+  <a class="brand" href="#dashboard"><span class="brand-mark">R</span><span>Resolve<span class="brand-iq">IQ</span><small>CLIENT OPERATIONS</small></span></a>
+  <p class="nav-label">WORKSPACE</p>
+  <nav aria-label="Main"><a href="#dashboard" data-page="dashboard">◫ <span>Dashboard</span></a><a href="#intake" data-page="intake">⊞ <span>Ticket intake</span></a><a href="#tickets" data-page="tickets">☷ <span>Tickets</span></a><a href="#bottlenecks" data-page="bottlenecks">◇ <span>Bottlenecks</span></a><a href="#reports" data-page="reports">▤ <span>Reports</span></a><a href="#settings" data-page="settings">⚙ <span>Settings</span></a></nav>
+  <div class="sidebar-foot"><span class="status-dot"></span> Read-only workspace<p>Synthetic data · Local demo</p></div>
+</aside>
+<div class="workspace">
+<header class="topbar"><span class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb">Dashboard</strong></span><span class="pill neutral">Human oversight enabled</span></header>
+<main id="main" tabindex="-1">
+  <div class="page-heading"><div><p class="eyebrow">IMPLEMENTATION INTELLIGENCE</p><h1 id="page-title">Client overview</h1><p id="page-subtitle">Understand what needs attention, with evidence behind every finding.</p></div><button id="view-report" class="primary" disabled>View client portfolio brief ↗</button></div>
+  <section class="scope-bar" aria-label="Client scope"><label for="client">Client workspace<select id="client"><option value="">Choose a client…</option></select></label><div id="assessment-info">Loading available clients…</div><button id="reload" class="secondary" disabled>Reload generated data</button></section>
+  <div id="safeguard" class="safeguard"><strong>Advisory only.</strong> No ticket updates or messages. Human decisions required.</div>
+  <div id="status" role="status" aria-live="polite"></div>
+  <div id="error" role="alert" hidden></div>
+  <section id="content" aria-label="Selected view"></section>
+  <footer>Evidence first. Decisions stay with you. <span>ResolveIQ · Synthetic-data MVP</span></footer>
+</main>
+</div>
+<dialog id="ticket-dialog" aria-labelledby="ticket-title"><div class="dialog-top"><p class="eyebrow">TICKET EVIDENCE</p><button id="close-dialog" class="secondary" aria-label="Close ticket details">Close ✕</button></div><div id="ticket-body"></div></dialog>
+<noscript><p>This dashboard requires JavaScript. Run the Python dashboard server and enable JavaScript to view generated brief data.</p></noscript>
+</body></html>

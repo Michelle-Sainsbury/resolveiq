@@ -22,7 +22,8 @@ The project was inspired by the operational responsibilities in
 including client portfolio tracking, cross-team coordination, and reporting on
 timelines, dependencies, risks, and bottlenecks. ResolveIQ explores a possible
 improvement to that work. The problem statement is a project hypothesis, not a
-confirmed account of Gradient AI's internal processes.
+confirmed account of Gradient AI's internal processes. ResolveIQ is an
+independent project and is not affiliated with Gradient AI.
 
 1. **Normalize** supported source records without filling in missing information.
 2. **Validate** required fields and defined contradictions.
@@ -31,15 +32,31 @@ confirmed account of Gradient AI's internal processes.
    and items needing human review.
 
 The shared branch includes normalization, validation, risk assessment, portfolio
-brief generation, and a command-line reporting runner. This README covers
-`feature/resolveiq-build`. The browser dashboard is developed separately on
-`michelle/dashboard` and is not part of this branch.
+brief generation, a command-line reporting runner, and a local browser dashboard.
+The [walkthrough and sample brief](https://github.com/Michelle-Sainsbury/resolveiq/pull/7)
+and the [dashboard](https://github.com/Michelle-Sainsbury/resolveiq/pull/8) are
+merged into `feature/resolveiq-build`.
+
+## How ResolveIQ Handles Ticket Data
+
+The command-line runner loads tickets from a JSON file containing an array.
+The dashboard can preview synthetic JSON or CSV, and the library provides
+normalization adapters for CSV text and supported GitHub issue records supplied
+by a separate reader. ResolveIQ does not retrieve GitHub issues through a live API.
+
+Normalization and validation check whether required ticket information is
+missing, invalid, or contradictory. When those checks flag a ticket, its overall
+classification is **Needs Human Review**, even if there is also evidence that it
+is overdue or blocked. ResolveIQ preserves missing information and the evidence
+it has without guessing values. For example, an empty dependency list confirms
+that none are listed; a null list means the information is unknown. The checks
+apply to required fields on the normalized ticket, not arbitrary source metadata.
 
 ## Features
 
 - **Ticket Validation:** Identifies missing or incorrectly formatted information
   so managers know which records need correction or review.
-- **Risk Prioritization:** Highlights overdue deadlines, recorded blocked work,
+- **Risk Signals:** Highlights overdue deadlines, recorded blocked work,
   and approaching due dates so teams can focus their review on supported risk
   signals. It does not automatically rank work or decide operational priorities.
 - **Dependency Review:** Flags unknown, malformed, duplicate, or self-referencing
@@ -62,11 +79,12 @@ fetch GitHub issues or accept CSV files directly.
 | **Python 3** | Core application logic, ticket validation, risk assessment, and portfolio reporting. Verified here with Python 3.9.6. |
 | **Python standard library** | `json` and `csv` handle source records; `datetime` supports calendar-date calculations; built-in data structures and `copy` preserve structured evidence. No third-party Python runtime packages are required. |
 | **GitHub Issues data adapter** | Normalizes supported Cycle 2 reader dictionaries through `normalize_github_issue`. The adapter does not independently call the live GitHub API. |
-| **HTML, CSS, JavaScript** | Browser dashboard on `michelle/dashboard`; not part of the shared application branch described here. |
+| **HTML, CSS, JavaScript** | Local browser dashboard included in `feature/resolveiq-build`. |
 | **Python unittest** | Automated validation, normalization, risk, portfolio, and runner tests. |
-| **Playwright** | Verified browser-test tooling on `michelle/dashboard`, using Node.js and an installed Chrome executable. Optional dashboard development tooling; not required for the command-line demo. |
+| **Playwright** | Browser-test tooling on the shared branch, using Node.js and an installed Chrome executable. Optional dashboard development tooling; not required for the command-line demo. |
 | **Git and GitHub** | Version control, descriptive commits, pull requests, and collaborative review. |
-| **OpenAI Codex** | AI-assisted development, documentation, and code review. A development tool, not an application runtime dependency. |
+| **OpenAI Codex** | Assisted Michelle with development, documentation, and code review. Development tooling only. |
+| **Claude Code** | Assisted Huma with portfolio reporting, runner development and tests, and the walkthrough. Claude co-authorship is recorded in [PR #5](https://github.com/Michelle-Sainsbury/resolveiq/pull/5), [PR #6](https://github.com/Michelle-Sainsbury/resolveiq/pull/6), and [PR #7](https://github.com/Michelle-Sainsbury/resolveiq/pull/7) commit history. Development tooling only. |
 
 **Current risk classification is deterministic and rule-based, not powered by a
 live AI model.** The synthetic-data workflow needs no LLM service or API key.
@@ -78,14 +96,17 @@ ResolveIQ is a collaborative project by **Michelle Sainsbury and Huma Ali**.
 - **Michelle Sainsbury:** Led ticket validation and risk assessment
   ([PR #2](https://github.com/Michelle-Sainsbury/resolveiq/pull/2)), normalization
   and review gating ([PR #3](https://github.com/Michelle-Sainsbury/resolveiq/pull/3)),
-  and the separate dashboard implementation and usability refinements
-  ([PR #8](https://github.com/Michelle-Sainsbury/resolveiq/pull/8)).
+  and dashboard implementation and usability refinements
+  ([PR #8](https://github.com/Michelle-Sainsbury/resolveiq/pull/8)). She also
+  reviewed and tested shared changes, identifying a runner defect where a report
+  could overwrite the input ticket file.
 - **Huma Ali:** Led synthetic fixtures and expected results
   ([PR #4](https://github.com/Michelle-Sainsbury/resolveiq/pull/4)), evidence-preserving
   portfolio reporting ([PR #5](https://github.com/Michelle-Sainsbury/resolveiq/pull/5)),
-  the reporting runner and collision-protection tests
+  the reporting runner, the input/output collision fix, and its regression tests
   ([PR #6](https://github.com/Michelle-Sainsbury/resolveiq/pull/6)), and the walkthrough
   and sample brief ([PR #7](https://github.com/Michelle-Sainsbury/resolveiq/pull/7)).
+  She tested the reporting workflow and documented its limitations.
 
 Huma reviewed the validation and normalization PRs; Michelle integrated the
 merged implementation PRs into the shared build branch. The linked PRs retain
@@ -118,19 +139,32 @@ Run the following commands from the repository root, which contains `scripts/`,
 
 ## Demo
 
-**No installation needed:** [Read the existing sample portfolio brief](https://github.com/Michelle-Sainsbury/resolveiq/blob/63fd63563815785cc290e224364f3e7bb9c780d8/docs/sample/brief.md)
-from PR #7. This commit-pinned link works independently of which branch displays
-this README. Repository access is required while the project is private.
+**No installation needed:** [Read the sample portfolio brief](docs/sample/brief.md)
+from PR #7. See the [synthetic-data walkthrough](docs/walkthrough.md) for the
+full CLI demonstration. Repository access is required while the project is private.
 
 ### Dashboard screenshot
 
 ![ResolveIQ Client B portfolio dashboard showing synthetic ticket classifications and human-approval safeguards](docs/images/resolveiq-dashboard.png)
 
-Existing synthetic-data capture from November 9, 2026. The dashboard implementation
-is on `michelle/dashboard` (verified at `3392a2a`), separate from this branch's
-command-line workflow. Client B has eight tickets: 0 High, 1 Medium, 2 Low, and
-5 needing human review. This capture predates a small display refinement: current
-ticket cards also show the ticket title above the owner/date line.
+Existing synthetic-data capture from November 9, 2026. The dashboard originated
+on `michelle/dashboard` and is now included in `feature/resolveiq-build`.
+Client B has eight tickets: 0 High, 1 Medium, 2 Low, and 5 needing human review.
+The capture predates a display refinement that adds ticket titles to the cards.
+
+### Run the browser dashboard
+
+From the repository root:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/serve_dashboard.py --date 2026-11-04
+```
+
+Open http://127.0.0.1:8787 and select a client. The dashboard uses generated
+brief data and provides client-scoped ticket details, evidence, JSON/CSV intake
+previews, and report viewing and downloads. It does not change source tickets or
+send messages. See the [dashboard guide](docs/dashboard.md) for setup, browser
+checks, and limitations.
 
 ### Run the command-line demo
 
@@ -187,38 +221,27 @@ command-line arguments.
 
 ## Repository Structure
 
-The folders below exist on this documentation branch, based on
-`feature/resolveiq-build`:
+The project is organized as follows:
 
 | Path | Purpose |
 | --- | --- |
 | `resolveiq/` | Python package containing validation, normalization, risk assessment, and portfolio-brief functions. |
-| `scripts/` | Command-line reporting entry point, `run_brief.py`. |
+| `scripts/` | Command-line reporting runner and local dashboard server. |
+| `dashboard/` | Browser interface and styling. |
+| `docs/` | Walkthrough, sample brief, dashboard guide, and screenshot. |
 | `data/tickets/` | Controlled synthetic JSON ticket inputs. |
 | `data/expected/` | Development-set expected outcomes, kept separate from source tickets. |
-| `tests/` | Automated Python tests for the shared application and runner. |
+| `tests/` | Automated Python and browser regression checks. |
 | `docs/images/` | The verified dashboard screenshot embedded in this README. |
 | `README.md` | Project overview, demonstration, setup, tests, limitations, and technical reference. |
 | `.gitignore` | Excludes local environment files, Python bytecode/cache files, and other generated artifacts. |
 
-The additional `dashboard/` folder, dashboard server, and browser-test script are
-on `michelle/dashboard`; they are not application files on this branch. The
-existing walkthrough and sample brief are linked from PR #7 above.
-
 ### Commit history
 
-The ten recent commits reviewed through `9e410f1` use specific change or
-integration descriptions. Examples include:
-
-- `9e410f1` — Add verified dashboard screenshot to README.
-- `62c5e97` — Revise ResolveIQ README for recruiter readability.
-- `e511ace` — Refuse to run when the tickets file is also an output file.
-- `55f848e` — Add brief runner script and tests.
-
-No message in that reviewed set is merely "fix" or "update". Automatic merge
-messages identify a PR and source branch; the linked PR supplies the functional
-context. This README update documents the existing organization: it does not
-reorganize application folders or rewrite commit history.
+Recent descriptive commits include `3392a2a` (dashboard usability and evidence
+navigation), `63fd635` (walkthrough access and limitations), and `e511ace`
+(runner input/output collision fix). Merge commits identify the pull request
+and source branch.
 
 ## Testing
 
@@ -228,27 +251,29 @@ Run the complete suite from the repository root:
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 ```
 
-Verified on **November 10, 2026**, in an isolated copy of shared-branch commit
-`39d9dcae9c2c2d39a629b9ff5155b59588b0a088`, using Python 3.9.6:
+Verification on macOS with Python 3.9.6 against the shared implementation at
+`482cb7ea1bb6a1ca158acbfa9ffb1df6e2e21efd`:
 
-| Area | Tests passed |
+| Area | Checks passed |
 | --- | ---: |
 | Validation | 14 |
 | Risk assessment | 15 |
 | Normalization | 22 |
 | Portfolio brief | 43 |
 | Reporting runner | 21 |
-| **Total** | **115** |
+| Dashboard (Python) | 21 |
+| **Python total** | **136** |
+| Dashboard (Playwright/Chrome) | 32 |
 
-There were **0 failures, 0 errors, and 0 skipped tests**. Tests cover required
-fields, deadline boundaries, contradictory dependencies, review precedence,
-evidence preservation, client grouping, deterministic output, source immutability,
-and input/output collision protection.
+Python: zero failures, errors, or skips. Browser: zero failures or page errors.
+For optional browser tooling and commands, see the [dashboard guide](docs/dashboard.md#tests).
 
-The synthetic demo was also executed during this check and produced both report
-files with the totals shown above. These checks demonstrate tested behavior on
-controlled data; they do not establish independently measured accuracy, production
-performance, or time savings.
+The 20-ticket synthetic demo produced both report files with the totals above.
+This is development and regression verification. A separate human-label comparison
+on 20 tickets yielded 12 agreements (60%): 4 of 12 on separate evaluation records
+and 8 of 8 on reused development fixtures, after the reviewer corrected T-104 from Medium to Low.
+Agreement does not establish ground-truth accuracy, production performance, or
+time savings.
 
 ## Limitations
 
@@ -270,9 +295,9 @@ performance, or time savings.
 - **Report output failures:** If the second report file cannot be written, the
   runner can leave the first report file in the output directory. Check the exit
   status and both outputs before using them.
-- **Evaluation still pending:** Independent outcome/evidence scoring, the separate
-  Cycle 2 regression evaluation, and manual-versus-assisted timing remain outside
-  the verified results reported here.
+- **Evaluation limits:** The human-label comparison measures agreement on a
+  small sample. Separate Cycle 2 regression and manual-versus-assisted timing
+  are not covered by these results.
 
 ## Human oversight
 
