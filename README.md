@@ -2,13 +2,15 @@
 
 ## Problem
 
-Implementation managers and client operations teams often manage multiple tickets across different clients, making it difficult to identify missing information, approaching deadlines, unresolved blockers, and operational risks before they disrupt delivery.
+Implementation managers and client operations teams often manage multiple tickets across different clients, making it difficult to identify missing information, approaching deadlines, unresolved blockers, and operational risks before they disrupt delivery. These gaps can delay client go-lives and erode trust.
+
+## Solution
+
+ResolveIQ helps implementation managers monitor client projects, identify operational risks, and prepare clear, evidence-based reports so teams can address problems before they disrupt delivery.
 
 ResolveIQ addresses this challenge by validating ticket information, identifying evidence-based risks, and generating client-specific portfolio briefs that help teams prioritize human review.
 
 By bringing these findings into one place, ResolveIQ helps implementation teams make more informed decisions while keeping final approvals, escalations, and communications under human control.
-
-## Solution
 
 ResolveIQ is a Python decision-support prototype for reviewing a batch of tickets
 and turning their recorded facts into a portfolio brief for each client. Its
@@ -35,23 +37,39 @@ brief generation, and a command-line reporting runner. This README covers
 
 ## Features
 
-- **Ticket intake validation:** Checks ticket ID, client ID, owner, status, due
-  date, and dependencies; flags missing, malformed, or contradictory information.
-- **Four classifications:** High, Medium, Low, and Needs Human Review. The default
-  approaching-deadline window is three calendar days, inclusive.
-- **Evidence explanations:** Risk findings retain supporting fields, recorded
-  values, date calculations where applicable, and source provenance.
-- **Client portfolio briefs:** Group records by a valid, unflagged client ID;
-  keep incomplete tickets in that client's Human Review section and put records
-  without a verified client ID in a separate batch review queue.
-- **Preserved context:** Keep supported independent findings even when a ticket
-  needs review. Missing owner information can coexist with an overdue High finding.
-- **Repeatable reporting:** Produce JSON and Markdown from the same assessed
-  batch without modifying source tickets or executing operational actions.
+- **Ticket Validation:** Identifies missing or incorrectly formatted information
+  so managers know which records need correction or review.
+- **Risk Prioritization:** Highlights overdue deadlines, recorded blocked work,
+  and approaching due dates so teams can focus their review on supported risk
+  signals. It does not automatically rank work or decide operational priorities.
+- **Dependency Review:** Flags unknown, malformed, duplicate, or self-referencing
+  dependency information for investigation. References alone do not establish
+  whether a dependency exists, is unresolved, or is causing a blocker.
+- **Client Portfolio Reporting:** Generates client-specific summaries showing
+  recorded ticket status, risk levels, and supporting evidence.
+- **Human Review and Oversight:** Identifies situations requiring human judgment
+  and preserves supporting information so managers can make informed decisions
+  before taking action.
 
 The library includes adapters for decoded JSON, CSV text, and Cycle 2 GitHub
 reader dictionaries. The reporting runner reads a **JSON array**; it does not
 fetch GitHub issues or accept CSV files directly.
+
+## Tech Stack
+
+| Technology | Purpose and scope |
+| --- | --- |
+| **Python 3** | Core application logic, ticket validation, risk assessment, and portfolio reporting. Verified here with Python 3.9.6. |
+| **Python standard library** | `json` and `csv` handle source records; `datetime` supports calendar-date calculations; built-in data structures and `copy` preserve structured evidence. No third-party Python runtime packages are required. |
+| **GitHub Issues data adapter** | Normalizes supported Cycle 2 reader dictionaries through `normalize_github_issue`. The adapter does not independently call the live GitHub API. |
+| **HTML, CSS, JavaScript** | Browser dashboard on `michelle/dashboard`; not part of the shared application branch described here. |
+| **Python unittest** | Automated validation, normalization, risk, portfolio, and runner tests. |
+| **Playwright** | Verified browser-test tooling on `michelle/dashboard`, using Node.js and an installed Chrome executable. Optional dashboard development tooling; not required for the command-line demo. |
+| **Git and GitHub** | Version control, descriptive commits, pull requests, and collaborative review. |
+| **OpenAI Codex** | AI-assisted development, documentation, and code review. A development tool, not an application runtime dependency. |
+
+**Current risk classification is deterministic and rule-based, not powered by a
+live AI model.** The synthetic-data workflow needs no LLM service or API key.
 
 ## Contributions
 
@@ -167,6 +185,41 @@ input/output collisions, including symlinks and hard links, to protect the input
 Exit codes are `0` for success, `1` for unusable input/output, and `2` for invalid
 command-line arguments.
 
+## Repository Structure
+
+The folders below exist on this documentation branch, based on
+`feature/resolveiq-build`:
+
+| Path | Purpose |
+| --- | --- |
+| `resolveiq/` | Python package containing validation, normalization, risk assessment, and portfolio-brief functions. |
+| `scripts/` | Command-line reporting entry point, `run_brief.py`. |
+| `data/tickets/` | Controlled synthetic JSON ticket inputs. |
+| `data/expected/` | Development-set expected outcomes, kept separate from source tickets. |
+| `tests/` | Automated Python tests for the shared application and runner. |
+| `docs/images/` | The verified dashboard screenshot embedded in this README. |
+| `README.md` | Project overview, demonstration, setup, tests, limitations, and technical reference. |
+| `.gitignore` | Excludes local environment files, Python bytecode/cache files, and other generated artifacts. |
+
+The additional `dashboard/` folder, dashboard server, and browser-test script are
+on `michelle/dashboard`; they are not application files on this branch. The
+existing walkthrough and sample brief are linked from PR #7 above.
+
+### Commit history
+
+The ten recent commits reviewed through `9e410f1` use specific change or
+integration descriptions. Examples include:
+
+- `9e410f1` — Add verified dashboard screenshot to README.
+- `62c5e97` — Revise ResolveIQ README for recruiter readability.
+- `e511ace` — Refuse to run when the tickets file is also an output file.
+- `55f848e` — Add brief runner script and tests.
+
+No message in that reviewed set is merely "fix" or "update". Automatic merge
+messages identify a PR and source branch; the linked PR supplies the functional
+context. This README update documents the existing organization: it does not
+reorganize application folders or rewrite commit history.
+
 ## Testing
 
 Run the complete suite from the repository root:
@@ -237,6 +290,22 @@ or report grants approval to act. Ticket text is treated as data, not instructio
 
 <details>
 <summary>Ticket schema, Python APIs, normalization behavior, and existing user stories</summary>
+
+### Implementation capabilities
+
+- **Ticket intake validation:** Checks ticket ID, client ID, owner, status, due
+  date, and dependencies; flags missing, malformed, or contradictory information.
+- **Four classifications:** High, Medium, Low, and Needs Human Review. The default
+  approaching-deadline window is three calendar days, inclusive.
+- **Evidence explanations:** Risk findings retain supporting fields, recorded
+  values, date calculations where applicable, and source provenance.
+- **Client portfolio briefs:** Group records by a valid, unflagged client ID;
+  keep incomplete tickets in that client's Human Review section and put records
+  without a verified client ID in a separate batch review queue.
+- **Preserved context:** Keep supported independent findings even when a ticket
+  needs review. Missing owner information can coexist with an overdue High finding.
+- **Repeatable reporting:** Produce JSON and Markdown from the same assessed
+  batch without modifying source tickets or executing operational actions.
 
 ### Ticket validation
 
