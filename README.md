@@ -104,6 +104,18 @@ Run the following commands from the repository root, which contains `scripts/`,
 from PR #7. This commit-pinned link works independently of which branch displays
 this README. Repository access is required while the project is private.
 
+### Dashboard screenshot
+
+![ResolveIQ Client B portfolio dashboard showing synthetic ticket classifications and human-approval safeguards](docs/images/resolveiq-dashboard.png)
+
+Existing synthetic-data capture from November 9, 2026. The dashboard implementation
+is on `michelle/dashboard` (verified at `3392a2a`), separate from this branch's
+command-line workflow. Client B has eight tickets: 0 High, 1 Medium, 2 Low, and
+5 needing human review. This capture predates a small display refinement: current
+ticket cards also show the ticket title above the owner/date line.
+
+### Run the command-line demo
+
 The demo uses the repository's **20 synthetic tickets**, assessed on **November 4,
 2026**, with the default **three-day** deadline window. It requires no live data.
 
