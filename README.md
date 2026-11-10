@@ -22,10 +22,10 @@ High, Medium, Low, or Needs Human Review outcomes with field-level evidence,
 an explicit assessment date, and a configurable 3-calendar-day deadline window.
 Data-quality review is separate from human approval for all operational actions.
 
-The complete automated suite passed all 29 tests on November 6, 2026, covering
+The foundation suite passed all 29 tests on November 6, 2026, covering
 validation, risk classification, deadline boundaries, evidence, and unchanged
-inputs. Portfolio brief generation remains unimplemented. The project planning
-document is still under review. ResolveIQ remains read-only toward operational
+inputs. Portfolio brief generation, its reporting runner, and the local browser
+dashboard are now implemented. ResolveIQ remains read-only toward operational
 systems: these functions do not update tickets or send communications.
 
 ## Ticket validation
@@ -133,8 +133,9 @@ guarantee of safety. No missing values or external facts are invented.
 
 ## In-memory ticket normalization
 
-The complete suite passes 51 tests: the original 29 validation/risk tests plus
-22 normalization tests. Run it with the same unittest command above.
+The normalization milestone passed 51 tests: the original 29 validation/risk
+tests plus 22 normalization tests. Run the current full suite with the same
+unittest command above.
 
 The standard-library normalization adapters return independent envelopes with
 `ticket`, `source`, `raw_record`, `field_provenance`, and `normalization_issues`.
@@ -208,6 +209,23 @@ tickets, sends messages, invokes subprocesses, or accesses the network.
 Remaining integration decisions: approve a GitHub client/dependency source,
 closed-state mapping, and milestone-to-ticket deadline policy before enabling
 them. Agree on this evidence handoff with the portfolio brief consumer. Reader
-import, live retrieval, portfolio generation, and new risk rules are outside
-this implementation. GitHub reader records currently require review because
+import, live retrieval, and new risk rules are outside the normalization layer.
+Portfolio generation is implemented separately in `resolveiq/brief.py`.
+GitHub reader records currently require review because
 those required-field mappings remain unresolved.
+
+## Browser dashboard
+
+Run the local synthetic-data dashboard from the repository root:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/serve_dashboard.py --date 2026-11-04
+```
+
+Open http://127.0.0.1:8787 and select a client. The server uses actual generated
+`brief.json` data and the existing assessment/portfolio functions. It supports
+client-isolated ticket views, evidence details, JSON/CSV intake previews, and
+scoped report viewing/downloads. No source tickets are changed or messages sent.
+See [dashboard usage, tests, and PRD coverage](docs/dashboard.md) for details and
+backend limitations. The earlier 29/51-test counts describe historical stages;
+portfolio, runner, and dashboard tests are included by the full discovery command.
