@@ -84,7 +84,7 @@ fetch GitHub issues or accept CSV files directly.
 | **Playwright** | Browser-test tooling on the shared branch, using Node.js and an installed Chrome executable. Optional dashboard development tooling; not required for the command-line demo. |
 | **Git and GitHub** | Version control, descriptive commits, pull requests, and collaborative review. |
 | **OpenAI Codex** | Assisted Michelle with development, documentation, and code review. Development tooling only. |
-| **Claude Code** | Assisted Huma with portfolio reporting, runner development and tests, and the walkthrough. Claude co-authorship is recorded in [PR #5](https://github.com/Michelle-Sainsbury/resolveiq/pull/5), [PR #6](https://github.com/Michelle-Sainsbury/resolveiq/pull/6), and [PR #7](https://github.com/Michelle-Sainsbury/resolveiq/pull/7) commit history. Development tooling only. |
+| **Claude Code** | Assisted Huma with portfolio reporting, runner development and tests, and the walkthrough. Claude co-authorship is recorded in [PR #1](https://github.com/Michelle-Sainsbury/resolveiq/pull/1), [PR #4](https://github.com/Michelle-Sainsbury/resolveiq/pull/4), [PR #5](https://github.com/Michelle-Sainsbury/resolveiq/pull/5), [PR #6](https://github.com/Michelle-Sainsbury/resolveiq/pull/6), and [PR #7](https://github.com/Michelle-Sainsbury/resolveiq/pull/7) commit history. Development tooling only. |
 
 **Current risk classification is deterministic and rule-based, not powered by a
 live AI model.** The synthetic-data workflow needs no LLM service or API key.
@@ -273,8 +273,7 @@ Python: zero failures, errors, or skips. Browser: zero failures or page errors.
 For optional browser tooling and commands, see the [dashboard guide](docs/dashboard.md#tests).
 
 The 20-ticket synthetic demo produced both report files with the totals above.
-This is development and regression verification. In a separate independent evaluation, Michelle assessed 12 synthetic tickets
-on November 9, 2026 and 8 more on November 10 (20 total). Codex generated a
+This is development and regression verification. In a separate independent evaluation, Michelle personally assessed 20 synthetic tickets: 12 on November 9, 2026 and 8 on November 10, 2026. Codex generated a
 comparison against ResolveIQ's classifications: 12 of 20 agreements (60%),
 including 4 of 12 new evaluation tickets and 8 of 8 reused development fixtures.
 Michelle corrected her own T-104 assessment from Medium to Low after identifying
