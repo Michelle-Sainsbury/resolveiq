@@ -48,7 +48,7 @@ fetch GitHub issues or accept CSV files directly.
 | **Python 3** | Core application logic, ticket validation, risk assessment, and portfolio reporting. Verified here with Python 3.9.6. |
 | **Python standard library** | `json` and `csv` handle source records; `datetime` supports calendar-date calculations; built-in data structures and `copy` preserve structured evidence. No third-party Python runtime packages are required. |
 | **GitHub Issues data adapter** | Normalizes supported Cycle 2 reader dictionaries through `normalize_github_issue`. The adapter does not independently call the live GitHub API. |
-| **HTML, CSS, JavaScript** | Local browser dashboard included in `feature/resolveiq-build`. |
+| **HTML, CSS, JavaScript** | Local browser dashboard included in `main`. |
 | **Python unittest** | Automated validation, normalization, risk, portfolio, and runner tests. |
 | **Playwright** | Browser-test tooling on the shared branch, using Node.js and an installed Chrome executable. Optional dashboard development tooling; not required for the command-line demo. |
 | **Git and GitHub** | Version control, descriptive commits, pull requests, and collaborative review. |
@@ -88,22 +88,15 @@ implementation, test, and review history.
 Verified on macOS with Python **3.9.6**. Requirements:
 
 - Python 3 and Git installed.
-- Authorized repository access while the repository is private. Configure SSH
-  access or HTTPS authentication before cloning; no credentials belong in files.
-- No third-party Python packages are required.
+- No third-party Python packages or API keys are required for the synthetic-data demo.
+- The repository is public; no GitHub authentication is needed to clone it over HTTPS.
 
-Using an existing authorized SSH key:
+Clone the repository:
 
 ```sh
-git clone git@github.com:Michelle-Sainsbury/resolveiq.git
+git clone https://github.com/Michelle-Sainsbury/resolveiq.git
 cd resolveiq
-git switch feature/resolveiq-build
 ```
-
-With HTTPS authentication already configured, the clone URL is
-`https://github.com/Michelle-Sainsbury/resolveiq.git`. In an existing clone,
-check for local work before changing branches. `main` currently does not contain
-the implementation described here.
 
 Run the following commands from the repository root, which contains `scripts/`,
 `resolveiq/`, `data/`, and `tests/`.
@@ -112,7 +105,7 @@ Run the following commands from the repository root, which contains `scripts/`,
 
 **No installation needed:** [Read the sample portfolio brief](docs/sample/brief.md)
 from PR #7. See the [synthetic-data walkthrough](docs/walkthrough.md) for the
-full CLI demonstration. Repository access is required while the project is private.
+full CLI demonstration. The repository is public.
 
 ### Dashboard screenshot
 
