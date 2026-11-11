@@ -141,16 +141,16 @@ action.
 **REPORTED IN PRD (SECTION 14), NOT RE-VERIFIED.** A teammate, Michelle
 Sainsbury, assessed 20 synthetic tickets (12 new records and 8 reused
 development fixtures), and Michelle's labels were compared with ResolveIQ's
-classifications. The evaluator describes the assessment as independent.
-Agreement was 12 of 20 (60%): 4 of 12 on the new records and 8 of 8 on the
-reused fixtures. One label (T-104) was corrected from Medium to Low after the
-comparison; before that correction, agreement was 11 of 20 (55%). ResolveIQ
-classified T-104 as Low, so the correction turned a disagreement into an
-agreement. This is a teammate evaluation. It is not external validation, and it
-is not independently established ground-truth accuracy. PRD Section 14 documents
-the method and findings. The labels, the data, and the method are not in this
-repository and have not been re-checked here. The result does not support any
-statement about accuracy, production performance, or time saved.
+classifications. Michelle reports that she assessed the 20 tickets
+independently. Agreement was 12 of 20 (60%): 4 of 12 on the new records and 8 of
+8 on the reused fixtures. One label (T-104) was corrected from Medium to Low
+after the comparison; before that correction, agreement was 11 of 20 (55%).
+ResolveIQ classified T-104 as Low, so the correction turned a disagreement into
+an agreement. This is a teammate evaluation. It is not external validation, and
+it is not independently established ground-truth accuracy. PRD Section 14
+documents the method and findings. The labels, the data, and the method are not
+in this repository and have not been re-checked here. The result does not
+support any statement about accuracy, production performance, or time saved.
 
 ### 9. GitHub issues are not retrieved, and three fields are not mapped
 
