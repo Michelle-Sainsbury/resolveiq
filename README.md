@@ -108,9 +108,11 @@ ResolveIQ is a collaborative project by **Michelle Sainsbury and Huma Ali**.
   and sample brief ([PR #7](https://github.com/Michelle-Sainsbury/resolveiq/pull/7)).
   She tested the reporting workflow and documented its limitations.
 
-Huma reviewed the validation and normalization PRs; Michelle integrated the
-merged implementation PRs into the shared build branch. The linked PRs retain
-the implementation, test, and review history.
+Huma reviewed the validation and normalization PRs. GitHub's merge records
+show that Michelle merged PRs #1–#6, and Huma merged PRs #7 and #8 with
+Michelle's authorization. Merge attribution identifies who performed the merge,
+not necessarily who authored the implementation. The linked PRs retain the
+implementation, test, and review history.
 
 ## Setup
 
@@ -147,8 +149,10 @@ full CLI demonstration. Repository access is required while the project is priva
 
 ![ResolveIQ Client B portfolio dashboard showing synthetic ticket classifications and human-approval safeguards](docs/images/resolveiq-dashboard.png)
 
-Existing synthetic-data capture from November 9, 2026. The dashboard originated
-on `michelle/dashboard` and is now included in `feature/resolveiq-build`.
+Huma uploaded the ResolveIQ video demonstration on November 9, 2026. A
+screenshot was captured from that demonstration on November 10, 2026 for the
+Pursuit platform lesson. The dashboard originated on `michelle/dashboard` and
+is now included in `feature/resolveiq-build`.
 Client B has eight tickets: 0 High, 1 Medium, 2 Low, and 5 needing human review.
 The capture predates a display refinement that adds ticket titles to the cards.
 
@@ -269,11 +273,14 @@ Python: zero failures, errors, or skips. Browser: zero failures or page errors.
 For optional browser tooling and commands, see the [dashboard guide](docs/dashboard.md#tests).
 
 The 20-ticket synthetic demo produced both report files with the totals above.
-This is development and regression verification. A separate human-label comparison
-on 20 tickets yielded 12 agreements (60%): 4 of 12 on separate evaluation records
-and 8 of 8 on reused development fixtures, after the reviewer corrected T-104 from Medium to Low.
-Agreement does not establish ground-truth accuracy, production performance, or
-time savings.
+This is development and regression verification. In a separate independent evaluation, Michelle assessed 12 synthetic tickets
+on November 9, 2026 and 8 more on November 10 (20 total). Codex generated a
+comparison against ResolveIQ's classifications: 12 of 20 agreements (60%),
+including 4 of 12 new evaluation tickets and 8 of 8 reused development fixtures.
+Michelle corrected her own T-104 assessment from Medium to Low after identifying
+an error. All 20 records were fictional; no real client records were used. This
+teammate evaluation measures agreement, not independently established ground-truth
+accuracy, production performance, or time savings.
 
 ## Limitations
 
