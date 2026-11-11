@@ -1,6 +1,10 @@
 # ResolveIQ
 
-## Implementation managers juggle tickets across many clients, and the signals that a go-live is slipping are buried: missing information, approaching deadlines, unresolved blockers. By the time someone notices, the delay has already hurt client trust.
+## Problem
+
+Implementation managers juggle tickets across many clients, and the signals that a go-live is slipping are buried: missing information, approaching deadlines, unresolved blockers. By the time someone notices, the delay has already hurt client trust.
+
+**Who it's for:** Implementation managers tracking tickets and delivery risks across multiple clients.
 
 ## Solution
 
@@ -37,8 +41,8 @@ apply to required fields on the normalized ticket, not arbitrary source metadata
   and preserves supporting information so managers can make informed decisions
   before taking action.
 
-The library includes adapters for decoded JSON, CSV text, and Cycle 2 GitHub
-reader dictionaries. The reporting runner reads a **JSON array**; it does not
+The library includes adapters for decoded JSON, CSV text, and GitHub issue
+reader dictionaries from an earlier Pursuit project (Cycle 2). The reporting runner reads a **JSON array**; it does not
 fetch GitHub issues or accept CSV files directly.
 
 ## Tech Stack
@@ -47,10 +51,10 @@ fetch GitHub issues or accept CSV files directly.
 | --- | --- |
 | **Python 3** | Core application logic, ticket validation, risk assessment, and portfolio reporting. Verified here with Python 3.9.6. |
 | **Python standard library** | `json` and `csv` handle source records; `datetime` supports calendar-date calculations; built-in data structures and `copy` preserve structured evidence. No third-party Python runtime packages are required. |
-| **GitHub Issues data adapter** | Normalizes supported Cycle 2 reader dictionaries through `normalize_github_issue`. The adapter does not independently call the live GitHub API. |
+| **GitHub Issues data adapter** | Normalizes supported reader dictionaries from an earlier Pursuit project (Cycle 2) through `normalize_github_issue`. The adapter does not independently call the live GitHub API. |
 | **HTML, CSS, JavaScript** | Local browser dashboard included in `main`. |
 | **Python unittest** | Automated validation, normalization, risk, portfolio, and runner tests. |
-| **Playwright** | Browser-test tooling on the shared branch, using Node.js and an installed Chrome executable. Optional dashboard development tooling; not required for the command-line demo. |
+| **Playwright** | Browser-test tooling in this repository, using Node.js and an installed Chrome executable. Optional dashboard development tooling; not required for the command-line demo. |
 | **Git and GitHub** | Version control, descriptive commits, pull requests, and collaborative review. |
 | **OpenAI Codex** | Assisted Michelle with development, documentation, and code review. Development tooling only. |
 | **Claude Code** | Assisted Huma with portfolio reporting, runner development and tests, and the walkthrough. Claude co-authorship is recorded in [PR #1](https://github.com/Michelle-Sainsbury/resolveiq/pull/1), [PR #4](https://github.com/Michelle-Sainsbury/resolveiq/pull/4), [PR #5](https://github.com/Michelle-Sainsbury/resolveiq/pull/5), [PR #6](https://github.com/Michelle-Sainsbury/resolveiq/pull/6), and [PR #7](https://github.com/Michelle-Sainsbury/resolveiq/pull/7) commit history. Development tooling only. |
@@ -111,10 +115,8 @@ full CLI demonstration. The repository is public.
 
 ![ResolveIQ Client B portfolio dashboard showing synthetic ticket classifications and human-approval safeguards](docs/images/resolveiq-dashboard.png)
 
-Huma uploaded the ResolveIQ video demonstration on November 9, 2026. A
-screenshot was captured from that demonstration on November 10, 2026 for the
-Pursuit platform lesson. The dashboard originated on `michelle/dashboard` and
-is now included in `feature/resolveiq-build`.
+The dashboard originated on `michelle/dashboard` and is now included in `main`.
+The screenshot was captured from a November 2026 demonstration.
 Client B has eight tickets: 0 High, 1 Medium, 2 Low, and 5 needing human review.
 The capture predates a display refinement that adds ticket titles to the cards.
 
@@ -146,6 +148,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_brief.py \
 printf 'Reports: %s\n' "$resolveiq_demo_dir"
 ```
 
+On success, the runner writes `brief.json` and `brief.md` to the output folder.
 Open `brief.md` in that folder with a text editor. `brief.json` contains the
 structured report, including full records and provenance. The date must be
 provided explicitly; the runner never substitutes today's date.
@@ -249,7 +252,8 @@ accuracy, production performance, or time savings.
   GitHub retrieval, or automated communications are connected to this workflow.
 - **Limited risk rules:** High is supported by blocked status or an overdue date.
   Low means no elevated signal under these rules, not a guarantee of safety.
-  Fourteen-day inactivity monitoring belongs to the separate Cycle 2 path.
+  Fourteen-day inactivity monitoring belongs to a separate earlier Pursuit
+project (Cycle 2).
 - **Dependency references only:** The system does not verify referenced tickets'
   existence, completion, or causal relationship to a blocker. Some dependency
   lists remain in JSON but are omitted from the current Markdown view.
