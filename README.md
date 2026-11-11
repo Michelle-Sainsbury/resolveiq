@@ -1,8 +1,6 @@
 # ResolveIQ
 
-## Problem
-
-Implementation managers and client operations teams often manage multiple tickets across different clients, making it difficult to identify missing information, approaching deadlines, unresolved blockers, and operational risks before they disrupt delivery. These gaps can delay client go-lives and erode trust.
+## Implementation managers juggle tickets across many clients, and the signals that a go-live is slipping are buried: missing information, approaching deadlines, unresolved blockers. By the time someone notices, the delay has already hurt client trust.
 
 ## Solution
 
