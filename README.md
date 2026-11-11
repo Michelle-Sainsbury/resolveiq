@@ -4,36 +4,7 @@
 
 ## Solution
 
-ResolveIQ helps implementation managers monitor client projects, identify operational risks, and prepare clear, evidence-based reports so teams can address problems before they disrupt delivery.
-
-ResolveIQ addresses this challenge by validating ticket information, identifying evidence-based risks, and generating client-specific portfolio briefs that help teams prioritize human review.
-
-By bringing these findings into one place, ResolveIQ helps implementation teams make more informed decisions while keeping final approvals, escalations, and communications under human control.
-
-ResolveIQ is a Python decision-support prototype for reviewing a batch of tickets
-and turning their recorded facts into a portfolio brief for each client. Its
-current workflow is deterministic and uses Python's standard library; no LLM,
-API key, or live service connection is needed to run the synthetic-data demo.
-
-The project was inspired by the operational responsibilities in
-[Gradient AI's Program Operations Specialist job description](https://job-boards.greenhouse.io/gradientai/jobs/8034609003),
-including client portfolio tracking, cross-team coordination, and reporting on
-timelines, dependencies, risks, and bottlenecks. ResolveIQ explores a possible
-improvement to that work. The problem statement is a project hypothesis, not a
-confirmed account of Gradient AI's internal processes. ResolveIQ is an
-independent project and is not affiliated with Gradient AI.
-
-1. **Normalize** supported source records without filling in missing information.
-2. **Validate** required fields and defined contradictions.
-3. **Assess risk** with an explicit date and evidence-backed rules.
-4. **Build client briefs** containing classifications, findings, source evidence,
-   and items needing human review.
-
-The shared branch includes normalization, validation, risk assessment, portfolio
-brief generation, a command-line reporting runner, and a local browser dashboard.
-The [walkthrough and sample brief](https://github.com/Michelle-Sainsbury/resolveiq/pull/7)
-and the [dashboard](https://github.com/Michelle-Sainsbury/resolveiq/pull/8) are
-merged into `feature/resolveiq-build`.
+ResolveIQ helps implementation managers catch delivery risks early. It validates ticket data, flags evidence-based risk signals, and generates client-specific portfolio briefs. Final approvals, escalations, and client communications stay with humans.
 
 ## How ResolveIQ Handles Ticket Data
 
